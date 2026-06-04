@@ -1,0 +1,41 @@
+package ra.yourprojectname.dao.impl;
+
+import ra.yourprojectname.dao.AdminDAO;
+import ra.yourprojectname.data_login.CheckLogin;
+import ra.yourprojectname.until.DBUtility;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class AdminDAOImpl implements AdminDAO {
+    @Override
+    public boolean login(String username, String password) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            con = DBUtility.openConnection();
+            pstmt = con.prepareStatement("select * from Admin where username=? and password=?");
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+
+            rs = pstmt.executeQuery();
+            if(rs.next()){
+                //..login thành công
+                CheckLogin.isAdmin = 1;
+                return true;
+            }else{
+                System.out.println("Sai username hoặc password");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs,pstmt,con);
+        }
+        return false;
+    }
+}
