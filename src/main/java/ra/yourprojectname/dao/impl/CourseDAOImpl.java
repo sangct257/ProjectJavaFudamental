@@ -15,14 +15,19 @@ import java.util.List;
 public class CourseDAOImpl implements CourseDAO {
 
     @Override
-    public List<Course> findAll() {
+    public List<Course> findAllWithPagination(int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con;
+        Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        con = DBUtility.openConnection();
         try {
-            pstmt = con.prepareStatement("select * from Course order by id asc");
+            con = DBUtility.openConnection();
+            // Câu lệnh SQL nhận tham số LIMIT (số dòng lấy ra) và OFFSET (vị trí bắt đầu lấy)
+            String sql = "SELECT * FROM Course ORDER BY id ASC LIMIT ? OFFSET ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, limit);
+            pstmt.setInt(2, offset);
+
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 Course course = new Course();
@@ -31,7 +36,6 @@ public class CourseDAOImpl implements CourseDAO {
                 course.setDuration(rs.getInt("duration"));
                 course.setInstructor(rs.getString("instructor"));
                 course.setCreate_at(rs.getDate("create_at"));
-
                 list.add(course);
             }
         } catch (SQLException e) {
@@ -39,8 +43,27 @@ public class CourseDAOImpl implements CourseDAO {
         } finally {
             DBUtility.closeConnection(rs, pstmt, con);
         }
-
         return list;
+    }
+
+    @Override
+    public int countTotalCourses() {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            pstmt = con.prepareStatement("SELECT COUNT(*) FROM Course");
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return 0;
     }
 
     @Override
@@ -106,16 +129,21 @@ public class CourseDAOImpl implements CourseDAO {
     }
 
     @Override
-    public List<Course> findCourseByName(String name) {
+    public List<Course> findCourseByNameWithPagination(String name, int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con;
-        PreparedStatement pstm = null;
+        Connection con = null;
+        PreparedStatement pstmt = null;
         ResultSet rs = null;
-        con = DBUtility.openConnection();
         try {
-            pstm = con.prepareStatement("SELECT * FROM Course WHERE name ILIKE ?");
-            pstm.setString(1, "%" + name + "%");
-            rs = pstm.executeQuery();
+            con = DBUtility.openConnection();
+            // Thêm LIMIT và OFFSET vào cuối câu lệnh tìm kiếm
+            String sql = "SELECT * FROM Course WHERE name ILIKE ? ORDER BY id ASC LIMIT ? OFFSET ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, "%" + name + "%");
+            pstmt.setInt(2, limit);
+            pstmt.setInt(3, offset);
+
+            rs = pstmt.executeQuery();
             while (rs.next()) {
                 Course course = new Course();
                 course.setId(rs.getInt("id"));
@@ -128,20 +156,44 @@ public class CourseDAOImpl implements CourseDAO {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            DBUtility.closeConnection(rs, pstm, con);
+            DBUtility.closeConnection(rs, pstmt, con);
         }
         return list;
     }
 
+    @Override
+    public int countCoursesByName(String name) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            pstmt = con.prepareStatement("SELECT COUNT(*) FROM Course WHERE name ILIKE ?");
+            pstmt.setString(1, "%" + name + "%");
+            rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return 0;
+    }
 
-    public List<Course> findAllSorted(String orderByColumn, String direction) {
+    @Override
+    public List<Course> findAllSortedWithPagination(String orderByColumn, String direction, int limit, int offset) {
         List<Course> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
             con = DBUtility.openConnection();
-            pstmt = con.prepareStatement("SELECT * FROM Course ORDER BY " + orderByColumn + " " + direction);
+            // Kết hợp Sắp xếp động + Phân trang động
+            String sql = "SELECT * FROM Course ORDER BY " + orderByColumn + " " + direction + " LIMIT ? OFFSET ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, limit);
+            pstmt.setInt(2, offset);
+
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 Course course = new Course(

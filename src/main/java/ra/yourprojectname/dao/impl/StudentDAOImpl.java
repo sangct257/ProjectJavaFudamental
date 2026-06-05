@@ -11,32 +11,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StudentDAOImpl implements StudentDAO {
+
     @Override
     public boolean login(String email, String password) {
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-
         try {
             con = DBUtility.openConnection();
-            pstmt = con.prepareStatement("select * from Student where email=? and password=?");
+            pstmt = con.prepareStatement("SELECT * FROM Student WHERE email = ? AND password = ?");
             pstmt.setString(1, email);
-            String encryptedInputPassword = PasswordHasher.hashPassword(password);
-            pstmt.setString(2, encryptedInputPassword);
-
+            pstmt.setString(2, PasswordHasher.hashPassword(password));
             rs = pstmt.executeQuery();
             if(rs.next()){
-                //..login thành công
                 CheckLogin.isAdmin = 2;
                 return true;
-            }else{
-                System.out.println("Sai username hoặc password");
+            } else {
+                System.err.println("Sai tài khoản hoặc mật khẩu đăng nhập!");
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
+            DBUtility.closeConnection(rs, pstmt, con);
         }
         return false;
     }
@@ -44,29 +40,164 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public List<Student> findAll() {
         List<Student> list = new ArrayList<>();
-        Connection con;
+        Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        con = DBUtility.openConnection();
         try {
+            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT * FROM Student ORDER BY id ASC");
             rs = pstmt.executeQuery();
             while (rs.next()){
                 list.add(new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDate("dob"),
-                        rs.getString("email"),
-                        rs.getBoolean("sex"),
-                        rs.getString("phone"),
-                        rs.getString("password"),
-                        rs.getDate("create_at")
+                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
+                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
+                        rs.getString("password"), rs.getDate("create_at")
                 ));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return list;
+    }
+
+    @Override
+    public List<Student> findAllWithPagination(int limit, int offset) {
+        List<Student> list = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            pstmt = con.prepareStatement("SELECT * FROM Student ORDER BY id ASC LIMIT ? OFFSET ?");
+            pstmt.setInt(1, limit);
+            pstmt.setInt(2, offset);
+            rs = pstmt.executeQuery();
+            while (rs.next()){
+                list.add(new Student(
+                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
+                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
+                        rs.getString("password"), rs.getDate("create_at")
+                ));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return list;
+    }
+
+    @Override
+    public int countTotalStudents() {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            pstmt = con.prepareStatement("SELECT COUNT(*) FROM Student");
+            rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return 0;
+    }
+
+    @Override
+    public List<Student> findStudentByNameEmailOrIdWithPagination(String keyword, int limit, int offset) {
+        List<Student> list = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            String sql = "SELECT * FROM Student WHERE name ILIKE ? OR email ILIKE ? ";
+            boolean isNumeric = keyword.matches("-?\\d+");
+            if (isNumeric) sql += "OR id = ? ";
+            sql += "ORDER BY id ASC LIMIT ? OFFSET ?";
+
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, "%" + keyword + "%");
+            pstmt.setString(2, "%" + keyword + "%");
+            if (isNumeric) {
+                pstmt.setInt(3, Integer.parseInt(keyword));
+                pstmt.setInt(4, limit);
+                pstmt.setInt(5, offset);
+            } else {
+                pstmt.setInt(3, limit);
+                pstmt.setInt(4, offset);
+            }
+
+            rs = pstmt.executeQuery();
+            while (rs.next()){
+                list.add(new Student(
+                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
+                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
+                        rs.getString("password"), rs.getDate("create_at")
+                ));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return list;
+    }
+
+    @Override
+    public int countSearchStudents(String keyword) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            String sql = "SELECT COUNT(*) FROM Student WHERE name ILIKE ? OR email ILIKE ? ";
+            boolean isNumeric = keyword.matches("-?\\d+");
+            if (isNumeric) sql += "OR id = ?";
+
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, "%" + keyword + "%");
+            pstmt.setString(2, "%" + keyword + "%");
+            if (isNumeric) pstmt.setInt(3, Integer.parseInt(keyword));
+
+            rs = pstmt.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return 0;
+    }
+
+    @Override
+    public List<Student> findAllSortedWithPagination(String column, String direction, int limit, int offset) {
+        List<Student> list = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            con = DBUtility.openConnection();
+            String sql = "SELECT * FROM Student ORDER BY " + column + " " + direction + " LIMIT ? OFFSET ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, limit);
+            pstmt.setInt(2, offset);
+            rs = pstmt.executeQuery();
+            while (rs.next()){
+                list.add(new Student(
+                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
+                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
+                        rs.getString("password"), rs.getDate("create_at")
+                ));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
         }
         return list;
     }
@@ -74,10 +205,10 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public boolean insertStudent(Student student) {
         boolean flag = false;
-        Connection con;
+        Connection con = null;
         PreparedStatement pstmt = null;
-        con = DBUtility.openConnection();
         try {
+            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("INSERT INTO Student(name, dob, email, sex, phone, password, create_at) VALUES(?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, student.getName());
             pstmt.setDate(2, new java.sql.Date(student.getDob().getTime()));
@@ -98,10 +229,10 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public boolean updateStudent(Student student) {
         boolean flag = false;
-        Connection con;
+        Connection con = null;
         PreparedStatement pstmt = null;
-        con = DBUtility.openConnection();
         try {
+            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("UPDATE Student SET name = ?, dob = ?, email = ?, sex = ?, phone = ?, password = ? WHERE id = ?");
             pstmt.setString(1, student.getName());
             pstmt.setDate(2, new java.sql.Date(student.getDob().getTime()));
@@ -122,10 +253,10 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public boolean deleteStudent(int id) {
         boolean flag = false;
-        Connection con;
+        Connection con = null;
         PreparedStatement pstmt = null;
-        con = DBUtility.openConnection();
         try {
+            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("DELETE FROM Student WHERE id = ?");
             pstmt.setInt(1, id);
             flag = pstmt.executeUpdate() > 0;
@@ -138,89 +269,16 @@ public class StudentDAOImpl implements StudentDAO {
     }
 
     @Override
-    public List<Student> findStudentByNameEmailOrId(String keyword) {
-        List<Student> list = new ArrayList<>();
-        Connection con;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        con = DBUtility.openConnection();
-        try {
-            String sql = "SELECT * FROM Student WHERE name ILIKE ? OR email ILIKE ? ";
-            // Kiểm tra xem từ khóa có phải là ID dạng số không
-            boolean isNumeric = keyword.matches("-?\\d+");
-            if(isNumeric){
-                sql += "OR id = ?";
-            }
-            pstmt = con.prepareStatement(sql);
-            pstmt.setString(1, "%" + keyword + "%");
-            pstmt.setString(2, "%" + keyword + "%");
-            if (isNumeric) {
-                pstmt.setInt(3, Integer.parseInt(keyword));
-            }
-
-            rs = pstmt.executeQuery();
-            while (rs.next()){
-                list.add(new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDate("dob"),
-                        rs.getString("email"),
-                        rs.getBoolean("sex"),
-                        rs.getString("phone"),
-                        rs.getString("password"),
-                        rs.getDate("create_at")
-                ));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
-        }
-        return list;
-    }
-
-    @Override
-    public List<Student> findAllSorted(String column, String direction) {
-        List<Student> list = new ArrayList<>();
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        con = DBUtility.openConnection();
-        try {
-            pstmt = con.prepareStatement("SELECT * FROM Student ORDER BY " + column + " " + direction);
-            rs = pstmt.executeQuery();
-            while (rs.next()){
-                list.add(new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDate("dob"),
-                        rs.getString("email"),
-                        rs.getBoolean("sex"),
-                        rs.getString("phone"),
-                        rs.getString("password"),
-                        rs.getDate("create_at")
-                ));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
-        }
-        return list;
-    }
-
-    @Override
     public Student getStudentByEmail(String email) {
-        Student student = new Student();
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        con = DBUtility.openConnection();
         try {
+            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT * FROM student WHERE email = ?");
             pstmt.setString(1, email);
             rs = pstmt.executeQuery();
-            while (rs.next()){
+            if (rs.next()){
                 return new Student(
                         rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
                         rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
@@ -230,8 +288,8 @@ public class StudentDAOImpl implements StudentDAO {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
+            DBUtility.closeConnection(rs, pstmt, con);
         }
-        return student;
+        return null;
     }
 }

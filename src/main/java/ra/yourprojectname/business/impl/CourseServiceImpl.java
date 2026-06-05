@@ -8,8 +8,17 @@ import java.util.List;
 
 public class CourseServiceImpl implements CourseService {
     @Override
-    public List<Course> getCourse() {
-        return new CourseDAOImpl().findAll();
+    public List<Course> getCoursesByPage(int page, int pageSize) {
+        // Xử lý tính toán logic offset tại tầng Service theo đúng kiến trúc mong muốn
+        int offset = (page - 1) * pageSize;
+        int limit = pageSize;
+        return new CourseDAOImpl().findAllWithPagination(limit, offset);
+    }
+
+    @Override
+    public int getTotalPages(int pageSize) {
+        int totalCourses = new CourseDAOImpl().countTotalCourses();
+        return (int) Math.ceil((double) totalCourses / pageSize);
     }
 
     @Override
@@ -28,12 +37,20 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> findCourseByName(String name) {
-        return new CourseDAOImpl().findCourseByName(name);
+    public List<Course> searchCoursesByPage(String name, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        return new CourseDAOImpl().findCourseByNameWithPagination(name, pageSize, offset);
     }
 
     @Override
-    public List<Course> getCourseSorted(String column, String direction) {
-        return new CourseDAOImpl().findAllSorted(column, direction);
+    public int getTotalPagesForSearch(String name, int pageSize) {
+        int total = new CourseDAOImpl().countCoursesByName(name);
+        return (int) Math.ceil((double) total / pageSize);
+    }
+
+    @Override
+    public List<Course> getSortedCoursesByPage(String column, String direction, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        return new CourseDAOImpl().findAllSortedWithPagination(column, direction, pageSize, offset);
     }
 }

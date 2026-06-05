@@ -5,10 +5,13 @@ import ra.yourprojectname.model.Course;
 import java.util.List;
 
 public interface CourseService {
-    List<Course> getCourse();
+    List<Course> getCoursesByPage(int page, int pageSize);
+    int getTotalPages(int pageSize);
+
     boolean insertCourse(Course course);
     boolean updateCourse(Course course);
     boolean deleteCourse(int id);
-    List<Course> findCourseByName(String name);
-    List<Course> getCourseSorted(String column, String direction);
+    List<Course> searchCoursesByPage(String name, int page, int pageSize);
+    int getTotalPagesForSearch(String name, int pageSize);
+    List<Course> getSortedCoursesByPage(String column, String direction, int page, int pageSize);
 }
