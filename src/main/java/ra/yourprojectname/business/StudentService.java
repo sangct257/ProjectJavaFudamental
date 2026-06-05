@@ -1,5 +1,6 @@
 package ra.yourprojectname.business;
 
+import ra.yourprojectname.model.Course;
 import ra.yourprojectname.model.Student;
 
 import java.util.List;

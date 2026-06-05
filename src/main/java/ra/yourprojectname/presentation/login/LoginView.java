@@ -111,7 +111,7 @@ public class LoginView {
         boolean isLoginSuccess = studentService.login(email, password);
 
         if (isLoginSuccess) {
-            new StudentView(scanner);
+            new StudentView(scanner, email);
         } else {
             System.err.println("Sai email hoặc password");
         }

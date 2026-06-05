@@ -138,68 +138,6 @@ public class StudentDAOImpl implements StudentDAO {
     }
 
     @Override
-    public Student findStudentById(int id) {
-        Student student = new Student();
-        Connection con;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        con = DBUtility.openConnection();
-        try {
-            pstmt = con.prepareStatement("SELECT * FROM Student WHERE id = ?");
-            pstmt.setInt(1,id);
-            rs = pstmt.executeQuery();
-            while (rs.next()){
-                return new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDate("dob"),
-                        rs.getString("email"),
-                        rs.getBoolean("sex"),
-                        rs.getString("phone"),
-                        rs.getString("password"),
-                        rs.getDate("create_at")
-                );
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
-        }
-        return student;
-    }
-
-    @Override
-    public Student findStudentByEmail(String email) {
-        Student student = new Student();
-        Connection con;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        con = DBUtility.openConnection();
-        try {
-            pstmt = con.prepareStatement("SELECT * FROM Student WHERE email = ?");
-            pstmt.setString(1,email);
-            rs = pstmt.executeQuery();
-            while (rs.next()){
-                return new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDate("dob"),
-                        rs.getString("email"),
-                        rs.getBoolean("sex"),
-                        rs.getString("phone"),
-                        rs.getString("password"),
-                        rs.getDate("create_at")
-                );
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            DBUtility.closeConnection(rs,pstmt,con);
-        }
-        return student;
-    }
-
-    @Override
     public List<Student> findStudentByNameEmailOrId(String keyword) {
         List<Student> list = new ArrayList<>();
         Connection con;
@@ -269,5 +207,31 @@ public class StudentDAOImpl implements StudentDAO {
             DBUtility.closeConnection(rs,pstmt,con);
         }
         return list;
+    }
+
+    @Override
+    public Student getStudentByEmail(String email) {
+        Student student = new Student();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        con = DBUtility.openConnection();
+        try {
+            pstmt = con.prepareStatement("SELECT * FROM student WHERE email = ?");
+            pstmt.setString(1, email);
+            rs = pstmt.executeQuery();
+            while (rs.next()){
+                return new Student(
+                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
+                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
+                        rs.getString("password"), rs.getDate("create_at")
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs,pstmt,con);
+        }
+        return student;
     }
 }

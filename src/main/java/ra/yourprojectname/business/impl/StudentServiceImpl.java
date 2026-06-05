@@ -8,6 +8,7 @@ import java.util.List;
 
 public class StudentServiceImpl implements StudentService {
     private final StudentDAOImpl studentDAO = new StudentDAOImpl();
+
     @Override
     public boolean login(String email, String password) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
