@@ -3,6 +3,7 @@ package ra.yourprojectname.dao.impl;
 import ra.yourprojectname.dao.AdminDAO;
 import ra.yourprojectname.data_login.CheckLogin;
 import ra.yourprojectname.until.DBUtility;
+import ra.yourprojectname.until.PasswordHasher;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,8 +21,8 @@ public class AdminDAOImpl implements AdminDAO {
             con = DBUtility.openConnection();
             pstmt = con.prepareStatement("select * from Admin where username=? and password=?");
             pstmt.setString(1, username);
-            pstmt.setString(2, password);
-
+            String encryptedInputPassword = PasswordHasher.hashPassword(password);
+            pstmt.setString(2, encryptedInputPassword);
             rs = pstmt.executeQuery();
             if(rs.next()){
                 //..login thành công
