@@ -13,252 +13,169 @@ import java.util.Scanner;
 public class StudentForAdminView {
     private final StudentService studentService = new StudentServiceImpl();
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-    private final int pageSize = 3; // Định cấu hình cố định 3 bản ghi một trang hiển thị
+    private final int pageSize = 3;
 
     public StudentForAdminView(Scanner scanner) {
-        boolean flag = true;
-        int choose;
-        String menuError = "";
-
-        while (flag) {
+        while (true) {
             System.out.println("\n=============== QUẢN LÝ HỌC VIÊN =============");
-            System.out.println("1. Hiển thị danh sách học viên (Phân trang)");
-            System.out.println("2. Thêm mới học viên");
-            System.out.println("3. Chỉnh sửa thông tin học viên");
-            System.out.println("4. Xóa học viên (xác nhận trước khi xoá)");
-            System.out.println("5. Tìm kiếm theo tên, email hoặc id (Phân trang)");
-            System.out.println("6. Sắp xếp theo tên hoặc id (Phân trang)");
-            System.out.println("7. Quay về menu chính");
+            System.out.println("1. Hiển thị danh sách học viên\n" +
+                    "2. Thêm mới học viên\n" +
+                    "3. Chỉnh sửa thông tin\n" +
+                    "4. Xóa học viên\n" +
+                    "5. Tìm kiếm học viên\n" +
+                    "6. Sắp xếp danh sách\n" +
+                    "7. Quay về menu chính");
             System.out.println("==============================================");
-            if (!menuError.isEmpty()) {
-                System.err.println(menuError);
-            }
-            while (true) {
-                System.out.print("Nhập lựa chọn: ");
-                try {
-                    choose = Integer.parseInt(scanner.nextLine().trim());
-                    break;
-                } catch (NumberFormatException e) {
-                    System.err.println("Bạn phải nhập vào là số!");
-                }
-            }
+            int choose = inputInt(scanner, "Nhập lựa chọn: ");
+
             switch (choose) {
                 case 1:
-                    menuError = "";
                     displayStudentWithPagination(scanner);
                     break;
                 case 2:
-                    menuError = "";
                     insertStudent(scanner);
                     break;
                 case 3:
-                    menuError = "";
                     updateStudent(scanner);
                     break;
                 case 4:
-                    menuError = "";
                     deleteStudent(scanner);
                     break;
                 case 5:
-                    menuError = "";
-                    searchStudentWithPagination(scanner);
+                    findStudentByNameEmailOrId(scanner);
                     break;
                 case 6:
-                    menuError = "";
-                    sortStudentWithPagination(scanner);
+                    findAllSorted(scanner);
                     break;
                 case 7:
-                    flag = false;
-                    break;
+                    return;
                 default:
-                    System.out.println("Bạn chỉ được nhập từ 1 đến 7");
+                    System.out.println("Bạn chỉ được nhập từ 1 đến 7!");
             }
         }
     }
 
-    //HIỂN THỊ DANH SÁCH MẶC ĐỊNH PHÂN TRANG ---
+    // --- PHÂN TRANG ---
+    private int handlePagination(Scanner scanner, int currentPage, int totalPages) {
+        if (totalPages <= 1) return -1;
+        System.out.print("[P]: Trang trước  |  [N]: Trang kế  |  [E]: Thoát. Chọn hành động: ");
+        String action = scanner.nextLine().trim().toUpperCase();
+
+        if (action.equals("N") && currentPage < totalPages) return currentPage + 1;
+        if (action.equals("P") && currentPage > 1) return currentPage - 1;
+        if (action.equals("E")) return -1;
+
+        System.err.println("Lệnh điều hướng không phù hợp!");
+        return currentPage;
+    }
+
+    // --- HIỂN THỊ DANH SÁCH ---
     public void displayStudentWithPagination(Scanner scanner) {
         int currentPage = 1;
         while (true) {
             int totalPages = studentService.getTotalPages(pageSize);
-            List<Student> list = studentService.getStudentsByPage(currentPage, pageSize);
+            List<Student> list = studentService.getAllStudents(currentPage, pageSize);
 
-            System.out.println("\n=== DANH SÁCH HỌC VIÊN HỆ THỐNG ===");
-            System.out.printf("TRANG %d / %d\n", currentPage, totalPages == 0 ? 1 : totalPages);
+            System.out.printf("\n=== DANH SÁCH HỌC VIÊN HỆ THỐNG (TRANG %d / %d) ===\n", currentPage, totalPages == 0 ? 1 : totalPages);
             printStudentTable(list);
 
-            if (totalPages > 1) {
-                System.out.println("[N]: Trang kế  |  [P]: Trang trước  |  [E]: Thoát");
-                System.out.print("Chọn hành động: ");
-                String action = scanner.nextLine().trim().toUpperCase();
-                if (action.equalsIgnoreCase("N") && currentPage < totalPages) {
-                    currentPage++;
-                } else if (action.equalsIgnoreCase("P") && currentPage > 1) {
-                    currentPage--;
-                } else if (action.equalsIgnoreCase("E")) {
-                    break;
-                } else {
-                    System.err.println("Lệnh điều hướng không phù hợp!");
-                }
-            } else {
-                break;
-            }
+            currentPage = handlePagination(scanner, currentPage, totalPages);
+            if (currentPage == -1) break;
         }
     }
 
-    // TÌM KIẾM ĐƯỢC PHÂN TRANG
-    public void searchStudentWithPagination(Scanner scanner) {
+    // --- TÌM KIẾM HỌC VIÊN ---
+    public void findStudentByNameEmailOrId(Scanner scanner) {
         System.out.println("\n--- TÌM KIẾM HỌC VIÊN TƯƠNG ĐỐI ---");
-        System.out.print("Nhập từ khóa tìm kiếm (Tên / Email / Mã số ID): ");
-        String keyword = scanner.nextLine().trim();
-        if (keyword.isEmpty()) {
-            System.err.println("Từ khóa không được bỏ trống!");
-            return;
-        }
+        String keyword = inputNonEmpty(scanner, "Nhập từ khóa tìm kiếm (Tên / Email / Mã số ID): ");
 
         int currentPage = 1;
         while (true) {
             int totalPages = studentService.getSearchTotalPages(keyword, pageSize);
-            List<Student> list = studentService.searchStudentsByPage(keyword, currentPage, pageSize);
+            List<Student> list = studentService.findStudentByNameEmailOrId(keyword, currentPage, pageSize);
 
-            System.out.println("\nKẾT QUẢ TÌM KIẾM CHO TỪ KHÓA [" + keyword + "]");
-            System.out.printf("TRANG %d / %d\n", currentPage, totalPages == 0 ? 1 : totalPages);
+            System.out.printf("\n=== KẾT QUẢ TÌM KIẾM CHO TỪ KHÓA [%s] (TRANG %d / %d) ===\n", keyword, currentPage, totalPages == 0 ? 1 : totalPages);
             printStudentTable(list);
 
-            if (totalPages > 1) {
-                System.out.println("[N]: Trang kế  |  [P]: Trang trước  |  [E]: Thoát");
-                System.out.print("Chọn hành động: ");
-                String action = scanner.nextLine().trim().toUpperCase();
-                if (action.equalsIgnoreCase("N") && currentPage < totalPages) {
-                    currentPage++;
-                } else if (action.equalsIgnoreCase("P") && currentPage > 1) {
-                    currentPage--;
-                } else if (action.equalsIgnoreCase("E")) {
-                    break;
-                } else {
-                    System.err.println("Lệnh điều hướng không phù hợp!");
-                }
-            } else {
-                break;
-            }
+            currentPage = handlePagination(scanner, currentPage, totalPages);
+            if (currentPage == -1) break;
         }
     }
 
-    // SẮP XẾP ĐƯỢC PHÂN TRANG
-    public void sortStudentWithPagination(Scanner scanner) {
+    // --- SẮP XẾP DANH SÁCH ---
+    public void findAllSorted(Scanner scanner) {
         System.out.println("\n--- SẮP XẾP DANH SÁCH HỌC VIÊN ---");
-        System.out.println("1. Sắp xếp theo Tên học viên");
-        System.out.println("2. Sắp xếp theo Mã ID học viên");
-        System.out.print("Lựa chọn tiêu chí (1 hoặc 2): ");
-        String column = scanner.nextLine().trim().equals("2") ? "id" : "name";
-
-        System.out.println("1. Tăng dần (A-Z)");
-        System.out.println("2. Giảm dần (Z-A)");
-        System.out.print("Chọn chiều sắp xếp (1 hoặc 2): ");
-        String direction = scanner.nextLine().trim().equals("2") ? "DESC" : "ASC";
+        String column = inputNonEmpty(scanner, "Lựa chọn tiêu chí (1. Tên | 2. Mã ID): ").equals("2") ? "id" : "name";
+        String direction = inputNonEmpty(scanner, "Chọn chiều (1. Tăng dần A-Z | 2. Giảm dần Z-A): ").equals("2") ? "DESC" : "ASC";
 
         int currentPage = 1;
         while (true) {
             int totalPages = studentService.getTotalPages(pageSize);
-            List<Student> list = studentService.getStudentsSortedByPage(column, direction, currentPage, pageSize);
+            List<Student> list = studentService.findAllSorted(column, direction, currentPage, pageSize);
 
-            System.out.println("\nDANH SÁCH HỌC VIÊN SAU KHI SẮP XẾP");
-            System.out.printf("TRANG %d / %d\n", currentPage, totalPages == 0 ? 1 : totalPages);
+            System.out.printf("\n=== DANH SÁCH HỌC VIÊN SAU KHI SẮP XẾP (TRANG %d / %d) ===\n", currentPage, totalPages == 0 ? 1 : totalPages);
             printStudentTable(list);
 
-            if (totalPages > 1) {
-                System.out.println("[N]: Trang kế  |  [P]: Trang trước  |  [E]: Thoát");
-                System.out.print("Chọn hành động: ");
-                String action = scanner.nextLine().trim().toUpperCase();
-                if (action.equalsIgnoreCase("N") && currentPage < totalPages) {
-                    currentPage++;
-                } else if (action.equalsIgnoreCase("P") && currentPage > 1) {
-                    currentPage--;
-                } else if (action.equalsIgnoreCase("E")) {
-                    break;
-                } else {
-                    System.err.println("Lệnh điều hướng không phù hợp!");
-                }
-            } else {
-                break;
-            }
+            currentPage = handlePagination(scanner, currentPage, totalPages);
+            if (currentPage == -1) break;
         }
     }
 
+    // --- THÊM MỚI HỌC VIÊN ---
     public void insertStudent(Scanner scanner) {
         System.out.println("\n---- THÊM MỚI HỌC VIÊN ----");
         String name = inputNonEmpty(scanner, "Nhập họ tên học viên: ");
-        Date dob = inputDate(scanner, "Nhập ngày sinh (Định dạng: DD-MM-YYYY): ");
+        Date dob = inputDate(scanner, "Nhập ngày sinh (DD-MM-YYYY): ");
         String email = inputEmail(scanner, "Nhập địa chỉ Email: ");
         boolean sex = inputSex(scanner);
-        System.out.print("Nhập số điện thoại (Ấn Enter nếu muốn bỏ qua): ");
+        System.out.print("Nhập số điện thoại (Ấn Enter để bỏ qua): ");
         String phone = scanner.nextLine().trim();
-        if (phone.isEmpty()) phone = null;
         String password = inputNonEmpty(scanner, "Thiết lập mật khẩu đăng nhập: ");
 
-        Student student = new Student(0, name, dob, email, sex, phone, password, new Date());
-        try {
-            if (studentService.insertStudent(student)) {
-                System.out.println("Thêm mới học viên thành công!");
-            } else {
-                System.err.println("Thêm mới học viên thất bại.");
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi: " + e.getMessage());
+        Student student = new Student(0, name, dob, email, sex, phone.isEmpty() ? null : phone, password, new Date());
+        if (studentService.insertStudent(student)) {
+            System.out.println("Thêm mới học viên thành công!");
+        } else {
+            System.err.println("Thêm mới học viên thất bại.");
         }
     }
 
+    // --- CHỈNH SỬA THÔNG TIN ---
     public void updateStudent(Scanner scanner) {
         System.out.println("\n--- CHỈNH SỬA THÔNG TIN HỌC VIÊN ---");
-        System.out.print("Nhập mã ID học viên cần chỉnh sửa: ");
-        int id;
-        try {
-            id = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.err.println("Lỗi: ID bắt buộc phải là số nguyên!");
-            return;
-        }
+        int id = inputInt(scanner, "Nhập mã ID học viên cần chỉnh sửa: ");
 
-        List<Student> all = studentService.getALLStudents();
-        Student editStudent = null;
-        for (Student s : all) {
-            if (s.getId() == id) {
-                editStudent = s;
-                break;
-            }
-        }
+        Student editStudent = studentService.getStudentById(id);
 
         if (editStudent == null) {
             System.err.println("Không tìm thấy thông tin học viên nào ứng với mã ID = " + id);
             return;
         }
 
+        // Tạo đối tượng Clone để lưu tạm các thay đổi, tránh hỏng dữ liệu gốc khi bấm Hủy
         Student cloneStudent = new Student(
                 editStudent.getId(), editStudent.getName(), editStudent.getDob(), editStudent.getEmail(),
                 editStudent.isSex(), editStudent.getPhone(), editStudent.getPassword(), editStudent.getCreate_at()
         );
 
-        boolean subFlag = true;
-        boolean isSave = false;
+        while (true) {
+            System.out.printf("\nHọc viên đang chỉnh sửa: %s\n", cloneStudent.getName());
+            System.out.println("1. Sửa họ tên      | 2. Sửa ngày sinh | 3. Sửa Email | 4. Sửa giới tính");
+            System.out.println("5. Sửa số điện thoại| 6. Đổi mật khẩu  | 7. Lưu lại   | 8. Hủy bỏ");
+            int subChoose = inputInt(scanner, "Chọn thuộc tính cần sửa (1-8): ");
 
-        while (subFlag) {
-            System.out.println("\nHọc viên đang chỉnh sửa: " + cloneStudent.getName());
-            System.out.println("1. Sửa họ tên");
-            System.out.println("2. Sửa ngày sinh");
-            System.out.println("3. Sửa Email");
-            System.out.println("4. Sửa giới tính");
-            System.out.println("5. Sửa số điện thoại");
-            System.out.println("6. Đổi mật khẩu");
-            System.out.println("7. Lưu lại thay đổi");
-            System.out.println("8. Hủy bỏ (Thoát không lưu)");
-            System.out.print("Chọn cấu phần thuộc tính cần sửa (1-8): ");
+            if (subChoose == 7) {
+                if (studentService.updateStudent(cloneStudent)) {
+                    System.out.println("Cập nhật thông tin học viên thành công!");
+                } else {
+                    System.err.println("Thao tác lưu thất bại.");
+                }
+                break;
+            }
 
-            int subChoose;
-            try {
-                subChoose = Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.err.println("Vui lòng nhập số!");
-                continue;
+            if (subChoose == 8) {
+                System.out.println("Đã hủy bỏ mọi sửa đổi. Dữ liệu gốc được giữ nguyên!");
+                break;
             }
 
             switch (subChoose) {
@@ -275,7 +192,7 @@ public class StudentForAdminView {
                     cloneStudent.setSex(inputSex(scanner));
                     break;
                 case 5:
-                    System.out.print("Nhập số điện thoại mới: ");
+                    System.out.print("Nhập số điện thoại mới (Ấn Enter để xóa/bỏ qua): ");
                     String p = scanner.nextLine().trim();
                     cloneStudent.setPhone(p.isEmpty() ? null : p);
                     break;
@@ -283,58 +200,76 @@ public class StudentForAdminView {
                     String rawPass = inputNonEmpty(scanner, "Nhập mật khẩu mới: ");
                     cloneStudent.setPassword(PasswordHasher.hashPassword(rawPass));
                     break;
-                case 7:
-                    isSave = true;
-                    subFlag = false;
-                    break;
-                case 8:
-                    isSave = false;
-                    subFlag = false;
-                    break;
                 default:
-                    System.out.println("Lựa chọn thuộc phạm vi từ 1 đến 8!");
+                    System.out.println("Lựa chọn không hợp lệ! Vui lòng chọn từ 1 đến 8.");
             }
-        }
-
-        if (isSave) {
-            try {
-                if (studentService.updateStudent(cloneStudent)) {
-                    System.out.println("Cập nhật thông tin học viên thành công!");
-                } else {
-                    System.err.println("Thao tác lưu thất bại.");
-                }
-            } catch (Exception e) {
-                System.err.println("Lỗi: " + e.getMessage());
-            }
-        } else {
-            System.out.println("Đã hủy bỏ mọi sửa đổi.");
         }
     }
 
+    // --- XÓA HỌC VIÊN ---
     public void deleteStudent(Scanner scanner) {
         System.out.println("\n--- XÓA HỌC VIÊN ---");
-        System.out.print("Nhập mã ID học viên cần xóa: ");
-        int id;
-        try {
-            id = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.err.println("ID phải là định dạng số!");
-            return;
-        }
+        int id = inputInt(scanner, "Nhập mã ID học viên cần xóa: ");
 
-        System.out.print("Cảnh báo: Bạn chắc chắn muốn xóa học viên này khỏi hệ thống? (Gõ 'Y' để đồng ý): ");
+        System.out.print("Cảnh báo: Bạn chắc chắn muốn xóa học viên này? (Gõ 'Y' để đồng ý): ");
         if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
-            try {
-                if (studentService.deleteStudent(id)) {
-                    System.out.println("Xóa dữ liệu học viên thành công!");
-                } else {
-                    System.err.println("Không tìm thấy học viên mã ID phù hợp.");
-                }
-            } catch (Exception e) {
-                System.err.println("Lỗi: " + e.getMessage());
+            if (studentService.deleteStudent(id)) {
+                System.out.println("Xóa dữ liệu học viên thành công!");
+            } else {
+                System.err.println("Không tìm thấy học viên mã ID phù hợp.");
             }
         } else {
-            System.out.println("➡Thao tác xóa đã được hủy bỏ.");
+            System.out.println("Thao tác xóa đã được hủy bỏ.");
+        }
+    }
+
+    // --- CÁC HÀM TRỢ GIÚP KIỂM TRA ĐẦU VÀO TẬP TRUNG ---
+    private int inputInt(Scanner scanner, String msg) {
+        while (true) {
+            System.out.print(msg);
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.err.println("Lỗi: Bạn phải nhập vào là số nguyên!");
+            }
+        }
+    }
+
+    private String inputNonEmpty(Scanner scanner, String msg) {
+        while (true) {
+            System.out.print(msg);
+            String input = scanner.nextLine().trim();
+            if (!input.isEmpty()) return input;
+            System.err.println("Lỗi: Vui lòng nhập dữ liệu, không bỏ trống!");
+        }
+    }
+
+    private boolean inputSex(Scanner scanner) {
+        while (true) {
+            String choice = inputNonEmpty(scanner, "Nhập giới tính học viên (1: Nam / 0: Nữ): ");
+            if (choice.equals("1")) return true;
+            if (choice.equals("0")) return false;
+            System.err.println("Lỗi: Hãy chọn số 1 hoặc số 0!");
+        }
+    }
+
+    private Date inputDate(Scanner scanner, String msg) {
+        while (true) {
+            System.out.print(msg);
+            try {
+                return sdf.parse(scanner.nextLine().trim());
+            } catch (Exception e) {
+                System.err.println("Lỗi: Định dạng ngày bắt buộc là DD-MM-YYYY (Ví dụ: 20-11-2003)!");
+            }
+        }
+    }
+
+    private String inputEmail(Scanner scanner, String msg) {
+        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        while (true) {
+            String email = inputNonEmpty(scanner, msg);
+            if (email.matches(regex)) return email;
+            System.err.println("Lỗi: Email sai cấu trúc định dạng!");
         }
     }
 
@@ -354,66 +289,5 @@ public class StudentForAdminView {
                     s.getId(), s.getName(), dobStr, s.getEmail(), sexStr, s.getPhone() != null ? s.getPhone() : "N/A");
         }
         System.out.println("+" + "-".repeat(5) + "+" + "-".repeat(25) + "+" + "-".repeat(13) + "+" + "-".repeat(25) + "+" + "-".repeat(10) + "+" + "-".repeat(15) + "+");
-    }
-
-    private boolean inputSex(Scanner scanner) {
-        while (true) {
-            System.out.print("Nhập giới tính học viên (1: Nam / 0: Nữ): ");
-            String choice = scanner.nextLine().trim();
-            if (choice.equalsIgnoreCase("1")) {
-                return true;
-            }
-            if (choice.equalsIgnoreCase("0")) {
-                return false;
-            }
-            System.err.println("Lỗi: Hãy chọn số 1 hoặc số 0!");
-        }
-    }
-
-    private Date inputDate(Scanner scanner, String msg) {
-        Date date;
-        while (true) {
-            System.out.print(msg);
-            try {
-                date = sdf.parse(scanner.nextLine().trim());
-                break;
-            } catch (Exception e) {
-                System.err.println("Lỗi: Định dạng ngày bắt buộc là DD-MM-YYYY (Ví dụ: 20-11-2003)!");
-            }
-        }
-        return date;
-    }
-
-    private String inputEmail(Scanner scanner, String msg) {
-        String email;
-        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
-        while (true) {
-            System.out.print(msg);
-            email = scanner.nextLine().trim();
-            if (email.isEmpty()) {
-                System.err.println("Lỗi: Email không được trống!");
-                continue;
-            }
-            if (!email.matches(regex)) {
-                System.err.println("Lỗi: Email sai cấu trúc định dạng!");
-                continue;
-            }
-            break;
-        }
-        return email;
-    }
-
-    private String inputNonEmpty(Scanner scanner, String msg) {
-        String input;
-        while (true) {
-            System.out.print(msg);
-            input = scanner.nextLine().trim();
-            if (input.isEmpty()) {
-                System.err.println("Lỗi: Vui lòng nhập dữ liệu, không bỏ trống!");
-                continue;
-            }
-            break;
-        }
-        return input;
     }
 }

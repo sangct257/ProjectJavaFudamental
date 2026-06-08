@@ -20,14 +20,9 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public List<Student> getALLStudents() {
-        return studentDAO.findAll();
-    }
-
-    @Override
-    public List<Student> getStudentsByPage(int page, int pageSize) {
+    public List<Student> getAllStudents(int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        return studentDAO.findAllWithPagination(pageSize, offset);
+        return studentDAO.getAllStudents(pageSize, offset);
     }
 
     @Override
@@ -37,26 +32,13 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public List<Student> searchStudentsByPage(String keyword, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        return studentDAO.findStudentByNameEmailOrIdWithPagination(keyword.trim(), pageSize, offset);
-    }
-
-    @Override
-    public int getSearchTotalPages(String keyword, int pageSize) {
-        int total = studentDAO.countSearchStudents(keyword.trim());
-        return (int) Math.ceil((double) total / pageSize);
-    }
-
-    @Override
-    public List<Student> getStudentsSortedByPage(String column, String direction, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        return studentDAO.findAllSortedWithPagination(column, direction, pageSize, offset);
-    }
-
-    @Override
     public boolean insertStudent(Student student) {
         return studentDAO.insertStudent(student);
+    }
+
+    @Override
+    public Student getStudentById(int id) {
+        return studentDAO.getStudentById(id);
     }
 
     @Override
@@ -67,5 +49,23 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public boolean deleteStudent(int id) {
         return studentDAO.deleteStudent(id);
+    }
+
+    @Override
+    public List<Student> findStudentByNameEmailOrId(String keyword, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        return studentDAO.findStudentByNameEmailOrId(keyword.trim(), pageSize, offset);
+    }
+
+    @Override
+    public int getSearchTotalPages(String keyword, int pageSize) {
+        int total = studentDAO.countSearchStudents(keyword.trim());
+        return (int) Math.ceil((double) total / pageSize);
+    }
+
+    @Override
+    public List<Student> findAllSorted(String column, String direction, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        return studentDAO.findAllSorted(column, direction, pageSize, offset);
     }
 }

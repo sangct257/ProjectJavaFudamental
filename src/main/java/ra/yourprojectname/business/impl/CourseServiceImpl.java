@@ -1,56 +1,59 @@
 package ra.yourprojectname.business.impl;
 
 import ra.yourprojectname.business.CourseService;
+import ra.yourprojectname.dao.CourseDAO;
 import ra.yourprojectname.dao.impl.CourseDAOImpl;
 import ra.yourprojectname.model.Course;
 
 import java.util.List;
 
 public class CourseServiceImpl implements CourseService {
+    private final CourseDAO courseDAO = new CourseDAOImpl();
+
+    private int computeOffset(int page, int pageSize) {
+        return (page - 1) * pageSize;
+    }
+
     @Override
-    public List<Course> getCoursesByPage(int page, int pageSize) {
-        // Xử lý tính toán logic offset tại tầng Service theo đúng kiến trúc mong muốn
-        int offset = (page - 1) * pageSize;
-        int limit = pageSize;
-        return new CourseDAOImpl().findAllWithPagination(limit, offset);
+    public List<Course> getAllCourseByPage(int page, int pageSize) {
+        return courseDAO.getAllCourseByPage(pageSize, computeOffset(page, pageSize));
     }
 
     @Override
     public int getTotalPages(int pageSize) {
-        int totalCourses = new CourseDAOImpl().countTotalCourses();
-        return (int) Math.ceil((double) totalCourses / pageSize);
+        return (int) Math.ceil((double) courseDAO.countTotalCourses() / pageSize);
     }
 
     @Override
     public boolean insertCourse(Course course) {
-        return new CourseDAOImpl().insertCourse(course);
+        return courseDAO.insertCourse(course);
     }
 
     @Override
     public boolean updateCourse(Course course) {
-        return new CourseDAOImpl().updateCourse(course);
+        return courseDAO.updateCourse(course);
     }
 
     @Override
     public boolean deleteCourse(int id) {
-        return new CourseDAOImpl().deleteCourse(id);
+        return courseDAO.deleteCourse(id);
     }
 
     @Override
-    public List<Course> searchCoursesByPage(String name, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        return new CourseDAOImpl().findCourseByNameWithPagination(name, pageSize, offset);
+    public List<Course> findCourseByName(String name, int page, int pageSize) {
+        return courseDAO.findCourseByName(name, pageSize, computeOffset(page, pageSize));
     }
 
     @Override
-    public int getTotalPagesForSearch(String name, int pageSize) {
-        int total = new CourseDAOImpl().countCoursesByName(name);
-        return (int) Math.ceil((double) total / pageSize);
+    public int countCoursesByName(String name, int pageSize) {
+        return (int) Math.ceil((double) courseDAO.countCoursesByName(name) / pageSize);
     }
 
     @Override
-    public List<Course> getSortedCoursesByPage(String column, String direction, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        return new CourseDAOImpl().findAllSortedWithPagination(column, direction, pageSize, offset);
+    public List<Course> findAllSorted(String column, String direction, int page, int pageSize) {
+        return courseDAO.findAllSorted(column, direction, pageSize, computeOffset(page, pageSize));
     }
+
+    @Override
+    public Course getCourseById(int id) { return courseDAO.findCourseById(id); }
 }

@@ -10,189 +10,122 @@ import java.util.Scanner;
 
 public class CourseForAdminView {
     private final CourseService courseService = new CourseServiceImpl();
+    private final int pageSize = 3; // Quản lý kích thước trang tập trung tại một nơi
 
     public CourseForAdminView(Scanner scanner) {
-        boolean flag = true;
-        int choose;
-        String menuError = "";
-        while (flag) {
-            System.out.println("=============== QUẢN LÝ KHÓA HỌC =============");
-            System.out.println("1. Hiển thị danh sách khóa học");
-            System.out.println("2. Thêm mới khóa học");
-            System.out.println("3. Chỉnh sửa thông tin khóa học (hiển thị menu chọn thuộc tính cần sửa)");
-            System.out.println("4. Xóa khóa học (xác nhận trước khi xoá)");
-            System.out.println("5. Tìm kiếm theo tên (tương đối)");
-            System.out.println("6. Sắp xếp theo tên hoặc id (tăng/giảm dần)");
-            System.out.println("7. Quay về menu chính");
-            System.out.println("================================");
-            if (!menuError.isEmpty()) {
-                System.err.println(menuError);
-            }
-            while (true) {
-                System.out.println("Nhập lựa chọn: ");
-                try {
-                    choose = Integer.parseInt(scanner.nextLine());
-                    break;
-                } catch (Exception e) {
-                    System.err.println("Bạn phải nhập vào là số");
-                }
-            }
+        while (true) {
+            System.out.println("\n=============== QUẢN LÝ KHÓA HỌC =============");
+            System.out.println("1. Hiển thị danh sách khóa học\n2. Thêm mới khóa học\n3. Chỉnh sửa thông tin\n4. Xóa khóa học\n5. Tìm kiếm theo tên\n6. Sắp xếp danh sách\n7. Quay về menu chính");
+            System.out.println("==============================================");
+            int choose = inputInt(scanner, "Nhập lựa chọn: ");
+
             switch (choose) {
-                case 1:
-                    menuError = "";
-                    displayCoursesWithPagination(scanner);
-                    break;
-                case 2:
-                    menuError = "";
-                    insertCourse(scanner);
-                    break;
-                case 3:
-                    menuError = "";
-                    updateCourse(scanner);
-                    break;
-                case 4:
-                    menuError = "";
-                    deleteCourse(scanner);
-                    break;
-                case 5:
-                    menuError = "";
-                    searchCourse(scanner);
-                    break;
-                case 6:
-                    menuError = "";
-                    sortCourse(scanner);
-                    break;
-                case 7:
-                    flag = false;
-                    break;
-                default:
-                    System.out.println("Bạn chỉ được nhập từ 1 đến 7");
+                case 1: displayCourses(scanner); break;
+                case 2: insertCourse(scanner); break;
+                case 3: updateCourse(scanner); break;
+                case 4: deleteCourse(scanner); break;
+                case 5: searchCourse(scanner); break;
+                case 6: sortCourse(scanner); break;
+                case 7: return;
+                default: System.out.println("Vui lòng chọn từ 1 đến 7!");
             }
         }
     }
 
-    // -HIỂN THỊ PHÂN TRANG ---
-    public void displayCoursesWithPagination(Scanner scanner) {
+    // ---HIỂN THỊ DANH SÁCH (PHÂN TRANG)---
+    public void displayCourses(Scanner scanner) {
         int currentPage = 1;
-        int pageSize = 3;
-
         while (true) {
             int totalPages = courseService.getTotalPages(pageSize);
-            List<Course> coursesPage = courseService.getCoursesByPage(currentPage, pageSize);
+            List<Course> list = courseService.getAllCourseByPage(currentPage, pageSize);
 
-            if (coursesPage.isEmpty()) {
-                System.err.println("Hiện tại danh sách khóa học đang trống!");
-                return;
-            }
+            if (checkEmpty(list)) return;
 
-            System.out.println("\n=== DANH SÁCH KHÓA HỌC HỆ THỐNG ===");
-            System.out.printf("TRANG %d / %d\n", currentPage, totalPages);
+            System.out.printf("\n=== DANH SÁCH KHÓA HỌC (TRANG %d / %d) ===\n", currentPage, totalPages == 0 ? 1 : totalPages);
+            printCourseTableFormat(list);
 
-            // Vẽ bảng hiển thị dữ liệu trang hiện hành
-            printCourseTableFormat(coursesPage);
-
-            if (totalPages > 1) {
-                System.out.println("[N]: Trang kế tiếp  |  [P]: Trang trước đó  |  [E]: Thoát danh sách");
-                System.out.print("Mời chọn hành động: ");
-                String action = scanner.nextLine().trim().toUpperCase();
-
-                if (action.equalsIgnoreCase("N")) {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                    } else {
-                        System.out.println("Bạn đang ở trang cuối cùng.");
-                    }
-                } else if (action.equalsIgnoreCase("P")) {
-                    if (currentPage > 1) {
-                        currentPage--;
-                    } else {
-                        System.out.println("Bạn đang ở trang đầu tiên.");
-                    }
-                } else if (action.equalsIgnoreCase("E")) {
-                    break;
-                } else {
-                    System.out.println("Lệnh điều hướng không hợp lệ!");
-                }
-            } else {
-                break; // Chỉ có 1 trang đơn lẻ thì không cần thanh điều hướng
-            }
+            currentPage = handlePagination(scanner, currentPage, totalPages);
+            if (currentPage == -1) break;
         }
     }
 
-    // Hàm vẽ bảng dữ liệu tĩnh dùng chung cho các tính năng khác
-    private void printCourseTableFormat(List<Course> list) {
-        System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
-        System.out.printf("| %-4s | %-28s | %-13s | %-23s | %-13s |\n", "ID", "TÊN KHÓA HỌC", "THỜI LƯỢNG", "GIẢNG VIÊN", "NGÀY TẠO");
-        System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
-        for (Course c : list) {
-            System.out.printf("| %-4d | %-28s | %-10d giờ | %-23s | %-13s |\n",
-                    c.getId(), c.getName(), c.getDuration(), c.getInstructor(), c.getCreate_at().toString());
+    // ---TÌM KIẾM THEO TÊN (PHÂN TRANG)---
+    public void searchCourse(Scanner scanner) {
+        String keyword = inputNonEmpty(scanner, "Nhập từ khóa tên khóa học muốn tìm: ");
+        int currentPage = 1;
+        while (true) {
+            int totalPages = courseService.countCoursesByName(keyword, pageSize);
+            List<Course> list = courseService.findCourseByName(keyword, currentPage, pageSize);
+
+            if (checkEmpty(list)) return;
+
+            System.out.printf("\n=== KẾT QUẢ TÌM KIẾM [%s] (TRANG %d / %d) ===\n", keyword, currentPage, totalPages == 0 ? 1 : totalPages);
+            printCourseTableFormat(list);
+
+            currentPage = handlePagination(scanner, currentPage, totalPages);
+            if (currentPage == -1) break;
         }
-        System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
     }
 
+    // ---SẮP XẾP DANH SÁCH (PHÂN TRANG) ---
+    public void sortCourse(Scanner scanner) {
+        String target = inputNonEmpty(scanner, "Chọn tiêu chí (1. Tên | 2. ID): ").equals("2") ? "id" : "name";
+        String direction = inputNonEmpty(scanner, "Chiều (1. Tăng dần | 2. Giảm dần): ").equals("2") ? "DESC" : "ASC";
 
+        int currentPage = 1;
+        while (true) {
+            int totalPages = courseService.getTotalPages(pageSize);
+            List<Course> list = courseService.findAllSorted(target, direction, currentPage, pageSize);
+
+            if (checkEmpty(list)) return;
+
+            System.out.printf("\n=== DANH SÁCH SẮP XẾP [%s - %s] (TRANG %d / %d) ===\n", target, direction, currentPage, totalPages);
+            printCourseTableFormat(list);
+
+            currentPage = handlePagination(scanner, currentPage, totalPages);
+            if (currentPage == -1) break;
+        }
+    }
+
+    // ---HÀM PHÂN TRANG---
+    private int handlePagination(Scanner scanner, int currentPage, int totalPages) {
+        if (totalPages <= 1) return -1; // Chỉ có 1 trang thì kết thúc vòng lặp luôn, không hỏi điều hướng
+
+        System.out.print("[P]: Trang trước | [N]: Trang kế | [E]: Thoát. Hành động: ");
+        String action = scanner.nextLine().trim().toUpperCase();
+
+        if (action.equals("N") && currentPage < totalPages) return currentPage + 1;
+        if (action.equals("P") && currentPage > 1) return currentPage - 1;
+        if (action.equals("E")) return -1;
+
+        System.out.println("Lệnh không hợp lệ hoặc không thể chuyển trang!");
+        return currentPage;
+    }
+
+    // ---THÊM MỚI KHÓA HỌC ---
     public void insertCourse(Scanner scanner) {
-        System.out.println("---THÊM MỚI KHOÁ HỌC----");
-        System.out.println("Mời nhập tên khoá học: ");
-        String name = scanner.nextLine().trim();
-        if (name.isEmpty()) {
-            System.err.println("Tên khoá học không được để trống!");
-            return;
-        }
-
-
-        int duration = 0;
-        try {
-            System.out.println("Mời nhập thời lượng khoá học (giờ): ");
-            duration = Integer.parseInt(scanner.nextLine().trim());
-            if (duration <= 0) {
-                System.err.println("Thời lượng không được < 0!");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Nhập một số nguyên");
-            return;
-        }
-
-        System.out.println("Mời nhập giảng viên phụ trách: ");
-        String instructor = scanner.nextLine().trim();
-        if (instructor.isEmpty()) {
-            System.err.println("Giảng viên phụ trách không được để trống!");
-            return;
-        }
+        System.out.println("\n--- THÊM MỚI KHÓA HỌC ---");
+        String name = inputNonEmpty(scanner, "Nhập tên khoá học: ");
+        int duration = inputPositiveInt(scanner, "Nhập thời lượng (giờ): ");
+        String instructor = inputNonEmpty(scanner, "Nhập giảng viên phụ trách: ");
 
         Course course = new Course(0, name, duration, instructor, new Date());
         if (courseService.insertCourse(course)) {
             System.out.println("Thêm mới khóa học thành công!");
         } else {
-            System.out.println("Thêm mới khóa học thất bại.");
+            System.out.println("Thêm mới thất bại.");
         }
     }
 
+    // ---CHỈNH SỬA THÔNG TIN KHÓA HỌC ---
     public void updateCourse(Scanner scanner) {
-        System.out.println("--- CHỈNH SỬA THÔNG TIN KHÓA HỌC ---");
-        System.out.print("Nhập ID khóa học cần sửa: ");
-        int id;
-        try {
-            id = Integer.parseInt(scanner.nextLine().trim());
-        } catch (NumberFormatException e) {
-            System.out.println("ID phải là số nguyên!");
-            return;
-        }
+        System.out.println("\n--- CHỈNH SỬA THÔNG TIN KHÓA HỌC ---");
+        int id = inputInt(scanner, "Nhập ID khóa học cần sửa: ");
 
-        int totalPages = courseService.getTotalPages(1000);
-        List<Course> all = courseService.getCoursesByPage(1, totalPages * 1000 == 0 ? 1 : totalPages * 1000);
+        Course editCourse = courseService.getCourseById(id);
 
-        Course editCourse = null;
-        for (Course c : all) {
-            if (c.getId() == id) {
-                editCourse = c;
-                break;
-            }
-        }
         if (editCourse == null) {
-            System.out.println("Không tìm thấy khóa học nào có mã ID = " + id);
+            System.err.println("Không tìm thấy khóa học mã ID = " + id);
             return;
         }
 
@@ -204,201 +137,92 @@ public class CourseForAdminView {
                 editCourse.getCreate_at()
         );
 
-        boolean subFlag = true;
-        boolean isSave = false;
-        while (subFlag) {
-            System.out.println("Khóa học đang chọn sửa: " + cloneCourse.getName());
-            System.out.println("1. Sửa tên khóa học");
-            System.out.println("2. Sửa thời lượng");
-            System.out.println("3. Sửa giảng viên phụ trách");
-            System.out.println("4. Lưu thông tin & Thoát");
-            System.out.println("5. Hủy bỏ (Thoát và không lưu gì cả)");
-            System.out.print("Nhập lựa chọn thuộc tính cần sửa: ");
-            int subChoose;
-            try {
-                subChoose = Integer.parseInt(scanner.nextLine().trim());
-            } catch (Exception e) {
-                System.err.println("Vui lòng nhập số!");
-                continue;
+        while (true) {
+            System.out.printf("\nĐang sửa: %s | 1. Tên | 2. Thời lượng | 3. Giảng viên | 4. Lưu lại | 5. Hủy bỏ\n", cloneCourse.getName());
+            int subChoose = inputInt(scanner, "Mời chọn thuộc tính cần sửa: ");
+
+            if (subChoose == 4) {
+                if (courseService.updateCourse(cloneCourse)) {
+                    System.out.println("Cập nhật thông tin khóa học thành công!");
+                } else {
+                    System.out.println("Cập nhật thất bại.");
+                }
+                break;
+            }
+            if (subChoose == 5) {
+                System.out.println("Đã hủy bỏ thao tác chỉnh sửa. Dữ liệu được giữ nguyên!");
+                break;
             }
 
             switch (subChoose) {
-                case 1:
-                    cloneCourse.setName(inputNonEmpty(scanner, "Nhập tên khóa học mới: "));
-                    break;
-                case 2:
-                    cloneCourse.setDuration(inputPositiveInt(scanner, "Nhập thời lượng mới (giờ): "));
-                    break;
-                case 3:
-                    cloneCourse.setInstructor(inputNonEmpty(scanner, "Nhập tên giảng viên mới: "));
-                    break;
-                case 4:
-                    isSave = true;
-                    subFlag = false;
-                    break;
-                case 5:
-                    isSave = false;
-                    subFlag = false;
-                    break;
-                default:
-                    System.out.println("Lựa chọn từ 1 đến 5.");
+                case 1: cloneCourse.setName(inputNonEmpty(scanner, "Nhập tên mới: ")); break;
+                case 2: cloneCourse.setDuration(inputPositiveInt(scanner, "Nhập thời lượng mới: ")); break;
+                case 3: cloneCourse.setInstructor(inputNonEmpty(scanner, "Nhập giảng viên mới: ")); break;
+                default: System.out.println("Vui lòng chọn từ 1 đến 5!");
             }
-        }
-
-        if (isSave) {
-            if (courseService.updateCourse(cloneCourse)) {
-                editCourse.setName(cloneCourse.getName());
-                editCourse.setDuration(cloneCourse.getDuration());
-                editCourse.setInstructor(cloneCourse.getInstructor());
-                System.out.println("Cập nhật thông tin khóa học thành công!");
-            } else {
-                System.out.println("Cập nhật thông tin thất bại.");
-            }
-        } else {
-            System.out.println("Đã hủy bỏ thao tác chỉnh sửa. Dữ liệu khóa học được giữ nguyên!");
         }
     }
-
+    // --- XÓA KHÓA HỌC ---
     public void deleteCourse(Scanner scanner) {
-        System.out.println("--- XÓA KHÓA HỌC HỆ THỐNG ---");
-        int id;
-        try {
-            System.out.println("Nhập ID khoá học cần xoá: ");
-            id = Integer.parseInt(scanner.nextLine().trim());
-        } catch (Exception e) {
-            System.out.println("ID phải là số nguyên!");
-            return;
-        }
-        System.out.print("Bạn có chắc chắn muốn xóa khóa học này không? (Gõ 'Y' để xóa, phím bất kỳ để hủy): ");
-        String confirm = scanner.nextLine().trim();
-        if (confirm.equalsIgnoreCase("Y")) {
-            try {
-                if (courseService.deleteCourse(id)) {
-                    System.out.println("Xóa khóa học thành công!");
-                } else {
-                    System.out.println("Không tìm thấy khóa học nào có ID bằng " + id + " để xóa.");
-                }
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+        System.out.println("\n--- XÓA KHÓA HỌC HỆ THỐNG ---");
+        int id = inputInt(scanner, "Nhập ID khoá học cần xoá: ");
+
+        System.out.print("Bạn có chắc chắn muốn xóa? (Gõ 'Y' để xác nhận): ");
+        if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
+            if (courseService.deleteCourse(id)) {
+                System.out.println("Xóa khóa học thành công!");
+            } else {
+                System.err.println("Không tìm thấy ID tương ứng.");
             }
         } else {
             System.out.println("Đã hủy thao tác xóa.");
         }
     }
 
-    public void searchCourse(Scanner scanner) {
-        System.out.println("\n--- TÌM KIẾM KHÓA HỌC THEO TÊN (PHÂN TRANG) ---");
-        System.out.print("Nhập từ khóa tên khóa học muốn tìm: ");
-        String keyword = scanner.nextLine().trim();
-
-        int currentPage = 1;
-        int pageSize = 3;
-
-        while (true) {
-            int totalPages = courseService.getTotalPagesForSearch(keyword, pageSize);
-            List<Course> resultsPage = courseService.searchCoursesByPage(keyword, currentPage, pageSize);
-
-            if (resultsPage.isEmpty()) {
-                System.err.println("Không tìm thấy khóa học nào phù hợp với từ khóa: " + keyword);
-                return;
-            }
-
-            System.out.println("\nKẾT QUẢ TÌM KIẾM CHO TIÊU CHÍ [" + keyword + "]");
-            System.out.printf("TRANG %d / %d\n", currentPage, totalPages);
-            printCourseTableFormat(resultsPage);
-
-            if (totalPages > 1) {
-                System.out.println("[N]: Trang kế tiếp  |  [P]: Trang trước đó  |  [E]: Thoát tìm kiếm");
-                System.out.print("Mời chọn hành động: ");
-                String action = scanner.nextLine().trim().toUpperCase();
-
-                if (action.equalsIgnoreCase("N") && currentPage < totalPages) {
-                    currentPage++;
-                } else if (action.equalsIgnoreCase("P") && currentPage > 1) {
-                    currentPage--;
-                } else if (action.equalsIgnoreCase("E")) {
-                    break;
-                } else System.out.println("Lệnh điều hướng không hợp lệ!");
-            } else {
-                break;
-            }
+    // ---HÀM NHẬP LIỆU & KIỂM TRA ---
+    private boolean checkEmpty(List<Course> list) {
+        if (list == null || list.isEmpty()) {
+            System.err.println("Hiện tại không có dữ liệu để hiển thị!");
+            return true;
         }
-    }
-
-    public void sortCourse(Scanner scanner) {
-        System.out.println("\n--- SẮP XẾP DANH SÁCH KHÓA HỌC (PHÂN TRANG) ---");
-        System.out.println("1. Sắp xếp theo Tên khóa học");
-        System.out.println("2. Sắp xếp theo ID khóa học");
-        System.out.print("Chọn tiêu chí (1 hoặc 2): ");
-        String target = scanner.nextLine().trim().equalsIgnoreCase("2") ? "id" : "name";
-
-        System.out.println("1. Sắp xếp Tăng dần (A-Z)");
-        System.out.println("2. Sắp xếp Giảm dần (Z-A)");
-        System.out.print("Chọn chiều sắp xếp (1 hoặc 2): ");
-        String direction = scanner.nextLine().trim().equalsIgnoreCase("2") ? "DESC" : "ASC";
-
-        int currentPage = 1;
-        int pageSize = 3; //
-
-        while (true) {
-            int totalPages = courseService.getTotalPages(pageSize);
-            List<Course> sortedPage = courseService.getSortedCoursesByPage(target, direction, currentPage, pageSize);
-
-            System.out.println("\nDANH SÁCH KHÓA HỌC SAU KHI SẮP XẾP");
-            System.out.printf("TRANG %d / %d (Tiêu chí: %s - %s)\n", currentPage, totalPages, target, direction);
-            printCourseTableFormat(sortedPage);
-
-            if (totalPages > 1) {
-                System.out.println("[N]: Trang kế tiếp  |  [P]: Trang trước đó  |  [E]: Thoát");
-                System.out.print("Mời chọn hành động: ");
-                String action = scanner.nextLine().trim().toUpperCase();
-
-                if (action.equalsIgnoreCase("N") && currentPage < totalPages) {
-                    currentPage++;
-                } else if (action.equalsIgnoreCase("P") && currentPage > 1) {
-                    currentPage--;
-                } else if (action.equalsIgnoreCase("E")) {
-                    break;
-                } else System.out.println("Lệnh điều hướng không hợp lệ!");
-            } else {
-                break;
-            }
-        }
+        return false;
     }
 
     private String inputNonEmpty(Scanner scanner, String message) {
-        String input;
-        String err = "";
         while (true) {
-            if (!err.isEmpty()) System.out.println(err);
             System.out.print(message);
-            input = scanner.nextLine().trim();
-            if (input.isEmpty()) {
-                err = "Lỗi: Trường này bắt buộc nhập, không được bỏ trống!";
-                continue;
-            }
-            break;
+            String input = scanner.nextLine().trim();
+            if (!input.isEmpty()) return input;
+            System.err.println("Lỗi: Không được để trống trường này!");
         }
-        return input;
+    }
+
+    private int inputInt(Scanner scanner, String message) {
+        while (true) {
+            try {
+                System.out.print(message);
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (Exception e) {
+                System.err.println("Lỗi: Phải nhập vào một số nguyên hợp lệ!");
+            }
+        }
     }
 
     private int inputPositiveInt(Scanner scanner, String message) {
-        int val;
-        String err = "";
         while (true) {
-            if (!err.isEmpty()) System.out.println(err);
-            System.out.print(message);
-            try {
-                val = Integer.parseInt(scanner.nextLine().trim());
-                if (val <= 0) {
-                    err = "Lỗi: Giá trị nhập vào phải lớn hơn 0!";
-                    continue;
-                }
-                break;
-            } catch (Exception e) {
-                err = "Lỗi: Vui lòng nhập đúng định dạng số nguyên!";
-            }
+            int val = inputInt(scanner, message);
+            if (val > 0) return val;
+            System.err.println("Lỗi: Giá trị nhập vào phải lớn hơn 0!");
         }
-        return val;
+    }
+
+    private void printCourseTableFormat(List<Course> list) {
+        System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
+        System.out.printf("| %-4s | %-28s | %-13s | %-23s | %-13s |\n", "ID", "TÊN KHÓA HỌC", "THỜI LƯỢNG", "GIẢNG VIÊN", "NGÀY TẠO");
+        System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
+        for (Course c : list) {
+            System.out.printf("| %-4d | %-28s | %-10d giờ | %-23s | %-13s |\n", c.getId(), c.getName(), c.getDuration(), c.getInstructor(), c.getCreate_at().toString());
+        }
+        System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
     }
 }

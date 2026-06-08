@@ -15,7 +15,7 @@ import java.util.List;
 public class CourseDAOImpl implements CourseDAO {
 
     @Override
-    public List<Course> findAllWithPagination(int limit, int offset) {
+    public List<Course> getAllCourseByPage(int limit, int offset) {
         List<Course> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -129,7 +129,7 @@ public class CourseDAOImpl implements CourseDAO {
     }
 
     @Override
-    public List<Course> findCourseByNameWithPagination(String name, int limit, int offset) {
+    public List<Course> findCourseByName(String name, int limit, int offset) {
         List<Course> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -181,7 +181,7 @@ public class CourseDAOImpl implements CourseDAO {
     }
 
     @Override
-    public List<Course> findAllSortedWithPagination(String orderByColumn, String direction, int limit, int offset) {
+    public List<Course> findAllSorted(String orderByColumn, String direction, int limit, int offset) {
         List<Course> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -211,5 +211,31 @@ public class CourseDAOImpl implements CourseDAO {
             DBUtility.closeConnection(rs, pstmt, con);
         }
         return list;
+    }
+
+    @Override
+    public Course findCourseById(int id) {
+        Course course = new Course();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        con = DBUtility.openConnection();
+        try {
+            pstmt = con.prepareStatement("SELECT * FROM Course WHERE id = ?");
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                course.setId(rs.getInt("id"));
+                course.setName(rs.getString("name"));
+                course.setDuration(rs.getInt("duration"));
+                course.setInstructor(rs.getString("instructor"));
+                course.setCreate_at(rs.getDate("create_at"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return course;
     }
 }
