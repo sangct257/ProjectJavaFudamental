@@ -4,7 +4,7 @@ import ra.yourprojectname.model.Course;
 import java.util.List;
 
 public interface CourseDAO {
-    List<Course> getAllCourseByPage(int limit, int offset);
+    List<Course> getAllCourse(int limit, int offset);
     int countTotalCourses();
     boolean insertCourse(Course course);
     boolean updateCourse(Course course);

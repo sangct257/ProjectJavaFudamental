@@ -64,8 +64,8 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public List<Student> findAllSorted(String column, String direction, int page, int pageSize) {
+    public List<Student> getAllSortedByNameOrById(String column, String direction, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        return studentDAO.findAllSorted(column, direction, pageSize, offset);
+        return studentDAO.getAllSortedByNameOrById(column, direction, pageSize, offset);
     }
 }

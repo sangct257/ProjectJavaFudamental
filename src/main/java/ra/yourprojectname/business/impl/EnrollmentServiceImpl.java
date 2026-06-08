@@ -5,6 +5,7 @@ import ra.yourprojectname.dao.impl.CourseDAOImpl;
 import ra.yourprojectname.dao.impl.EnrollmentDAOImpl;
 import ra.yourprojectname.dao.impl.StudentDAOImpl;
 import ra.yourprojectname.model.Course;
+import ra.yourprojectname.model.Enrollment;
 import ra.yourprojectname.model.Student;
 
 import java.util.ArrayList;
@@ -27,17 +28,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public boolean enrollCourse(int studentId, int courseId) {
-        if (enrollmentDAO.isEnrolled(studentId, courseId)) {
-            System.err.println("Bạn đã đăng ký khóa học này trước đó rồi!");
-            return false;
-        }
-        return enrollmentDAO.insertEnrollment(studentId, courseId);
-    }
-
-    @Override
-    public List<Course> getCoursesByPage(int page, int pageSize) {
-        return courseDAO.getAllCourseByPage(pageSize, computeOffset(page, pageSize));
+    public List<Course> getAllCourses(int page, int pageSize) {
+        return courseDAO.getAllCourse(pageSize, computeOffset(page, pageSize));
     }
 
     @Override
@@ -47,9 +39,78 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public List<Course> searchCoursesByPage(String keyword, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        return courseDAO.findCourseByName(keyword.trim(), pageSize, offset);
+    public List<Course> getRecommendedCoursesByEnrolled(int studentId, int limit) {
+        List<Course> allCourses = getAllCourses(1, 1000);
+        List<Course> enrolledCourses = getCoursesByStudentId(studentId, 1, 1000);
+        List<Course> recommendedList = new java.util.ArrayList<>();
+
+        if (enrolledCourses == null || enrolledCourses.isEmpty()) {
+            return recommendedList;
+        }
+
+        // DANH SÁCH TỪ VÔ NGHĨA (STOPWORDS) - Cần lọc bỏ trong Full-text Search
+        String[] stopwords = {"khoá", "khóa", "học", "trình", "lập", "cho", "và", "với", "core", "boot", "basic", "advance", "cơ", "bản", "nâng", "cao"};
+
+        for (Course systemCourse : allCourses) {
+
+            // 1. Kiểm tra nếu học viên đăng ký rồi thì TUYỆT ĐỐI không đề xuất lại
+            boolean isAlreadyEnrolled = false;
+            for (Course enrolled : enrolledCourses) {
+                if (enrolled.getId() == systemCourse.getId()) {
+                    isAlreadyEnrolled = true;
+                    break;
+                }
+            }
+
+            // 2. Nếu CHƯA ĐĂNG KÝ, tiến hành phân tích từ khóa toàn văn (Full-text)
+            if (!isAlreadyEnrolled) {
+                String systemCourseName = systemCourse.getName().toLowerCase();
+
+                // Duyệt qua các môn học viên ĐÃ đăng ký
+                for (Course enrolled : enrolledCourses) {
+                    String enrolledName = enrolled.getName().toLowerCase();
+
+                    // Tách chuỗi thành mảng các từ
+                    String[] keywords = enrolledName.split(" ");
+
+                    for (String word : keywords) {
+                        word = word.trim();
+
+                        // BƯỚC QUAN TRỌNG: Kiểm tra xem từ này có phải là từ vô nghĩa không
+                        boolean isStopword = false;
+                        for (String stop : stopwords) {
+                            if (word.equals(stop)) {
+                                isStopword = true;
+                                break;
+                            }
+                        }
+
+                        // Bỏ qua từ vô nghĩa và từ quá ngắn (<= 1 ký tự, trừ trường hợp đặc biệt như C)
+                        if (isStopword || word.length() <= 1) {
+                            continue;
+                        }
+
+                        // THUẬT TOÁN KHỚP: Tên môn mới phải chứa chính xác từ khóa công nghệ (Ví dụ: "java")
+                        if (systemCourseName.contains(word)) {
+                            if (!recommendedList.contains(systemCourse)) {
+                                recommendedList.add(systemCourse);
+                            }
+                            break; // Khớp từ khóa chất lượng này rồi thì chuyển sang môn tiếp theo
+                        }
+                    }
+                }
+            }
+
+            if (recommendedList.size() >= limit) {
+                break;
+            }
+        }
+        return recommendedList;
+    }
+
+    @Override
+    public List<Course> searchCourses(String keyword, int page, int pageSize) {
+        return courseDAO.findCourseByName(keyword.trim(), pageSize, computeOffset(page, pageSize));
     }
 
     @Override
@@ -59,9 +120,18 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public List<Course> getStudentCoursesByPage(int studentId, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        return enrollmentDAO.getCoursesByStudentIdWithPagination(studentId, pageSize, offset);
+    public boolean enrollCourse(int studentId, int courseId) {
+        if (enrollmentDAO.isEnrolled(studentId, courseId)) {
+            System.err.println("Bạn đã đăng ký khóa học này trước đó rồi!");
+            return false;
+        }
+        return enrollmentDAO.insertEnrollment(studentId, courseId);
+    }
+
+
+    @Override
+    public List<Course> getCoursesByStudentId(int studentId, int page, int pageSize) {
+        return enrollmentDAO.getCoursesByStudentId(studentId, pageSize, computeOffset(page, pageSize));
     }
 
     @Override
@@ -71,8 +141,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public List<Course> getStudentCoursesSortedByPage(int studentId, String column, String direction, int page, int pageSize) {
-        return enrollmentDAO.getCoursesByStudentIdSortedWithPagination(studentId, column, direction, pageSize, computeOffset(page, pageSize));
+    public List<Course> getCoursesByStudentIdSorted(int studentId, String column, String direction, int page, int pageSize) {
+        return enrollmentDAO.getCoursesByStudentIdSorted(studentId, column, direction, pageSize, computeOffset(page, pageSize));
     }
 
     @Override
@@ -86,84 +156,27 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public List<Course> getRecommendedCourses(int studentId) {
-        List<Course> enrolledCourses = enrollmentDAO.getCoursesByStudentIdWithPagination(studentId, 100, 0);
-
-        if (enrolledCourses == null || enrolledCourses.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        List<Course> allCourses = courseDAO.getAllCourseByPage(100, 0);
-        if (allCourses == null || allCourses.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // DANH SÁCH TỪ NHIỄU MỞ RỘNG (Stopwords tiếng Việt ngành lập trình)
-        Set<String> stopwords = new HashSet<>(java.util.Arrays.asList(
-                "học", "trình", "khóa", "ngôn", "ngữ", "cơ", "bản", "nâng", "cao",
-                "ứng", "dụng", "cho", "người", "mới", "bắt", "đầu", "phần", "mềm",
-                "giải", "thuật", "cấu", "trúc", "với", "và", "tập", "luyện", "đại"
-        ));
-
-        Set<Integer> enrolledIds = new HashSet<>();
-        java.util.Map<String, Integer> keywordWeights = new java.util.HashMap<>();
-
-        for (Course c : enrolledCourses) {
-            enrolledIds.add(c.getId());
-            String[] words = c.getName().toLowerCase().split("\\s+");
-            for (String w : words) {
-                // SỬA: Không chặn độ dài >= 3 nữa để giữ lại từ "c", "go", "js"...
-                // Chỉ cần từ đó không nằm trong danh sách từ nhiễu là được!
-                if (!w.isEmpty() && !stopwords.contains(w)) {
-                    keywordWeights.put(w, keywordWeights.getOrDefault(w, 0) + 1);
-                }
-            }
-        }
-
-        List<CourseWithScore> scoredCourses = new ArrayList<>();
-
-        for (Course c : allCourses) {
-            if (!enrolledIds.contains(c.getId())) {
-                int finalScore = 0;
-                String[] words = c.getName().toLowerCase().split("\\s+");
-                for (String w : words) {
-                    if (keywordWeights.containsKey(w)) {
-                        finalScore += keywordWeights.get(w);
-                    }
-                }
-
-                // Chỉ giữ lại khóa có điểm tương đồng thực sự
-                if (finalScore > 0) {
-                    scoredCourses.add(new CourseWithScore(c, finalScore));
-                }
-            }
-        }
-
-        if (scoredCourses.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        scoredCourses.sort((a, b) -> Integer.compare(b.score, a.score));
-
-        List<Course> recommendedList = new ArrayList<>();
-        int count = 0;
-        for (CourseWithScore cs : scoredCourses) {
-            recommendedList.add(cs.course);
-            count++;
-            if (count >= 3) break;
-        }
-
-        return recommendedList;
+    public List<Enrollment> getStudentsByCourseId(int courseId, int page, int pageSize) {
+        return enrollmentDAO.getStudentsByCourseId(courseId, pageSize, computeOffset(page, pageSize));
     }
 
-    private static class CourseWithScore {
-        Course course; // Đối tượng khóa học gốc
-        int score;     // Điểm số tương thích được thuật toán chấm
+    @Override
+    public List<Enrollment> getPendingEnrollments(int page, int pageSize) {
+        return enrollmentDAO.getPendingEnrollments(pageSize, computeOffset(page, pageSize));
+    }
 
-        // Hàm khởi tạo (Constructor)
-        CourseWithScore(Course course, int score) {
-            this.course = course;
-            this.score = score;
-        }
+    @Override
+    public boolean approveEnrollment(int studentId, int courseId) {
+        return enrollmentDAO.approveEnrollment(studentId, courseId);
+    }
+
+    @Override
+    public boolean isStudentInCourse(int studentId, int courseId) {
+        return enrollmentDAO.isStudentInCourse(studentId, courseId);
+    }
+
+    @Override
+    public boolean removeStudentFromCourse(int studentId, int courseId) {
+        return enrollmentDAO.removeStudentFromCourse(studentId, courseId);
     }
 }

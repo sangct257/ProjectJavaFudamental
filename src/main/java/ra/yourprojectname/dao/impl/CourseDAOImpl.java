@@ -15,7 +15,7 @@ import java.util.List;
 public class CourseDAOImpl implements CourseDAO {
 
     @Override
-    public List<Course> getAllCourseByPage(int limit, int offset) {
+    public List<Course> getAllCourse(int limit, int offset) {
         List<Course> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;

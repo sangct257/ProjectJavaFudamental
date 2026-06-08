@@ -18,5 +18,5 @@ public interface StudentDAO {
     List<Student> findStudentByNameEmailOrId(String keyword, int limit, int offset);
     int countSearchStudents(String keyword);
 
-    List<Student> findAllSorted(String column, String direction, int limit, int offset);
+    List<Student> getAllSortedByNameOrById(String column, String direction, int limit, int offset);
 }

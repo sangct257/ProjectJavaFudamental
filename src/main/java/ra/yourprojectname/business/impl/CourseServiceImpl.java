@@ -15,8 +15,8 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> getAllCourseByPage(int page, int pageSize) {
-        return courseDAO.getAllCourseByPage(pageSize, computeOffset(page, pageSize));
+    public List<Course> getAllCourse(int page, int pageSize) {
+        return courseDAO.getAllCourse(pageSize, computeOffset(page, pageSize));
     }
 
     @Override
@@ -50,7 +50,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> findAllSorted(String column, String direction, int page, int pageSize) {
+    public List<Course> getAllSorted(String column, String direction, int page, int pageSize) {
         return courseDAO.findAllSorted(column, direction, pageSize, computeOffset(page, pageSize));
     }
 

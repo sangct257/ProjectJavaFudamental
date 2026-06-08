@@ -37,7 +37,7 @@ public class CourseForAdminView {
         int currentPage = 1;
         while (true) {
             int totalPages = courseService.getTotalPages(pageSize);
-            List<Course> list = courseService.getAllCourseByPage(currentPage, pageSize);
+            List<Course> list = courseService.getAllCourse(currentPage, pageSize);
 
             if (checkEmpty(list)) return;
 
@@ -75,7 +75,7 @@ public class CourseForAdminView {
         int currentPage = 1;
         while (true) {
             int totalPages = courseService.getTotalPages(pageSize);
-            List<Course> list = courseService.findAllSorted(target, direction, currentPage, pageSize);
+            List<Course> list = courseService.getAllSorted(target, direction, currentPage, pageSize);
 
             if (checkEmpty(list)) return;
 

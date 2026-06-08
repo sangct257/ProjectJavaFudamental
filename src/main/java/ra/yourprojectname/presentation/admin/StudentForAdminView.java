@@ -111,7 +111,7 @@ public class StudentForAdminView {
         int currentPage = 1;
         while (true) {
             int totalPages = studentService.getTotalPages(pageSize);
-            List<Student> list = studentService.findAllSorted(column, direction, currentPage, pageSize);
+            List<Student> list = studentService.getAllSortedByNameOrById(column, direction, currentPage, pageSize);
 
             System.out.printf("\n=== DANH SÁCH HỌC VIÊN SAU KHI SẮP XẾP (TRANG %d / %d) ===\n", currentPage, totalPages == 0 ? 1 : totalPages);
             printStudentTable(list);

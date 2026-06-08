@@ -267,7 +267,7 @@ public class StudentDAOImpl implements StudentDAO {
     }
 
     @Override
-    public List<Student> findAllSorted(String column, String direction, int limit, int offset) {
+    public List<Student> getAllSortedByNameOrById(String column, String direction, int limit, int offset) {
         List<Student> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;
