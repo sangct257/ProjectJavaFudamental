@@ -123,9 +123,10 @@ public class LoginView {
 
         while (true){
             System.out.println("========== HỆ THỐNG QUẢN LÝ ĐÀO TẠO ===========");
-            System.out.println("1. Đăng nhập với tư cách quản trị viên");
-            System.out.println("2. Đăng nhập với tư cách học viên");
-            System.out.println("3. Thoát");
+            System.out.println("""
+            1. Đăng nhập với tư cách quản trị viên
+            2. Đăng nhập với tư cách học viên
+            3. Thoát """);
             System.out.println("=======================================");
             while (true){
                 System.out.println("Nhập lựa chọn: ");

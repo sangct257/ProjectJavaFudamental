@@ -19,14 +19,13 @@ public class StudentView {
         while (true) {
             System.out.println("\n=============== QUẢN LÝ HỌC VIÊN =============");
             System.out.println("""
-                    1. Hiển thị danh sách học viên
-                    2. Thêm mới học viên
-                    3. Chỉnh sửa thông tin
-                    4. Xóa học viên
-                    5. Tìm kiếm học viên
-                    6. Sắp xếp danh sách
-                    7. Quay về menu chính
-                    """);
+            1. Hiển thị danh sách học viên
+            2. Thêm mới học viên
+            3. Chỉnh sửa thông tin
+            4. Xóa học viên
+            5. Tìm kiếm học viên
+            6. Sắp xếp danh sách
+            7. Quay về menu chính """);
             System.out.println("==============================================");
             int choose = inputInt(scanner, "Nhập lựa chọn: ");
 
@@ -128,7 +127,7 @@ public class StudentView {
         System.out.println("\n---- THÊM MỚI HỌC VIÊN ----");
         String name = inputNonEmpty(scanner, "Nhập họ tên học viên: ");
         Date dob = inputDate(scanner, "Nhập ngày sinh (DD-MM-YYYY): ");
-        String email = inputEmail(scanner, "Nhập địa chỉ Email: ");
+        String email = inputEmailUnique(scanner, "Nhập địa chỉ Email: ");
         boolean sex = inputSex(scanner);
         System.out.print("Nhập số điện thoại (Ấn Enter để bỏ qua): ");
         String phone = scanner.nextLine().trim();
@@ -145,6 +144,7 @@ public class StudentView {
     // --- CHỈNH SỬA THÔNG TIN ---
     public void updateStudent(Scanner scanner) {
         System.out.println("\n--- CHỈNH SỬA THÔNG TIN HỌC VIÊN ---");
+        displayStudentWithPagination(scanner);
         int id = inputInt(scanner, "Nhập mã ID học viên cần chỉnh sửa: ");
 
         Student editStudent = studentService.getStudentById(id);
@@ -154,7 +154,6 @@ public class StudentView {
             return;
         }
 
-        // Tạo đối tượng Clone để lưu tạm các thay đổi, tránh hỏng dữ liệu gốc khi bấm Hủy
         Student cloneStudent = new Student(
                 editStudent.getId(), editStudent.getName(), editStudent.getDob(), editStudent.getEmail(),
                 editStudent.isSex(), editStudent.getPhone(), editStudent.getPassword(), editStudent.getCreateAt()
@@ -162,8 +161,8 @@ public class StudentView {
 
         while (true) {
             System.out.printf("\nHọc viên đang chỉnh sửa: %s\n", cloneStudent.getName());
-            System.out.println("1. Sửa họ tên      | 2. Sửa ngày sinh | 3. Sửa Email | 4. Sửa giới tính");
-            System.out.println("5. Sửa số điện thoại| 6. Đổi mật khẩu  | 7. Lưu lại   | 8. Hủy bỏ");
+            System.out.println("1. Sửa họ tên         | 2. Sửa ngày sinh | 3. Sửa Email | 4. Sửa giới tính");
+            System.out.println("5. Sửa số điện thoại  | 6. Đổi mật khẩu  | 7. Lưu lại   | 8. Hủy bỏ");
             int subChoose = inputInt(scanner, "Chọn thuộc tính cần sửa (1-8): ");
 
             if (subChoose == 7) {
@@ -182,19 +181,25 @@ public class StudentView {
 
             switch (subChoose) {
                 case 1:
+                    System.out.printf("Họ tên hiện tại: %s\n", cloneStudent.getName());
                     cloneStudent.setName(inputNonEmpty(scanner, "Nhập họ tên mới: "));
                     break;
                 case 2:
+                    System.out.printf("Ngày sinh hiện tại: %s\n", cloneStudent.getDob());
                     cloneStudent.setDob(inputDate(scanner, "Nhập ngày sinh mới (DD-MM-YYYY): "));
                     break;
                 case 3:
-                    cloneStudent.setEmail(inputEmail(scanner, "Nhập Email mới: "));
+                    System.out.printf("Email hiện tại: %s\n", cloneStudent.getEmail());
+                    cloneStudent.setEmail(inputEmailUnique(scanner, "Nhập Email mới: "));
                     break;
                 case 4:
+                    System.out.printf("Giới tính hiện tại: %s\n", cloneStudent.isSex() ? "Nam" : "Nữ");
                     cloneStudent.setSex(inputSex(scanner));
                     break;
                 case 5:
-                    System.out.print("Nhập số điện thoại mới (Ấn Enter để xóa/bỏ qua): ");
+                    System.out.printf("Số ĐT hiện tại: %s\n", cloneStudent.getPhone() != null ? cloneStudent.getPhone() : "Chưa có");
+                    System.out.print("Nhập số điện thoại mới (Hoặc ấn Enter để trống/bỏ qua): ");
+
                     String p = scanner.nextLine().trim();
                     cloneStudent.setPhone(p.isEmpty() ? null : p);
                     break;
@@ -225,53 +230,94 @@ public class StudentView {
         }
     }
 
-    // --- CÁC HÀM TRỢ GIÚP KIỂM TRA ĐẦU VÀO TẬP TRUNG ---
+    // --- ĐÃ ĐỒNG BỘ: CÁC HÀM TRỢ GIÚP KIỂM TRA ĐẦU VÀO TẬP TRUNG KHÔNG BỊ TRÙNG DÒNG ---
     private int inputInt(Scanner scanner, String msg) {
+        String errorMsg = "";
         while (true) {
+            if (!errorMsg.isEmpty()) {
+                System.out.print(errorMsg);
+                errorMsg = "";
+            }
             System.out.print(msg);
             try {
                 return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.err.println("Lỗi: Bạn phải nhập vào là số nguyên!");
+                errorMsg = "Lỗi: Bạn phải nhập vào là số nguyên!\n";
             }
         }
     }
 
     private String inputNonEmpty(Scanner scanner, String msg) {
+        String errorMsg = "";
         while (true) {
+            if (!errorMsg.isEmpty()) {
+                System.out.print(errorMsg);
+                errorMsg = "";
+            }
             System.out.print(msg);
             String input = scanner.nextLine().trim();
             if (!input.isEmpty()) return input;
-            System.err.println("Lỗi: Vui lòng nhập dữ liệu, không bỏ trống!");
+            errorMsg = "Lỗi: Vui lòng nhập dữ liệu, không bỏ trống!\n";
         }
     }
 
     private boolean inputSex(Scanner scanner) {
+        String errorMsg = "";
         while (true) {
-            String choice = inputNonEmpty(scanner, "Nhập giới tính học viên (1: Nam / 0: Nữ): ");
+            if (!errorMsg.isEmpty()) {
+                System.out.print(errorMsg);
+                errorMsg = "";
+            }
+            System.out.print("Nhập giới tính học viên (1: Nam / 0: Nữ): ");
+            String choice = scanner.nextLine().trim();
             if (choice.equals("1")) return true;
             if (choice.equals("0")) return false;
-            System.err.println("Lỗi: Hãy chọn số 1 hoặc số 0!");
+            errorMsg = "Lỗi: Hãy chọn số 1 hoặc số 0!\n";
         }
     }
 
     private Date inputDate(Scanner scanner, String msg) {
+        String errorMsg = "";
         while (true) {
+            if (!errorMsg.isEmpty()) {
+                System.out.print(errorMsg);
+                errorMsg = "";
+            }
             System.out.print(msg);
             try {
                 return sdf.parse(scanner.nextLine().trim());
             } catch (Exception e) {
-                System.err.println("Lỗi: Định dạng ngày bắt buộc là DD-MM-YYYY (Ví dụ: 20-11-2003)!");
+                errorMsg = "Lỗi: Định dạng ngày bắt buộc là DD-MM-YYYY (Ví dụ: 20-11-2003)!\n";
             }
         }
     }
 
-    private String inputEmail(Scanner scanner, String msg) {
-        String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private String inputEmailUnique(Scanner scanner, String msg) {
+        String errorMsg = "";
         while (true) {
-            String email = inputNonEmpty(scanner, msg);
-            if (email.matches(regex)) return email;
-            System.err.println("Lỗi: Email sai cấu trúc định dạng!");
+            if (!errorMsg.isEmpty()) {
+                System.out.print(errorMsg);
+                errorMsg = "";
+            }
+
+            System.out.print(msg);
+            String email = scanner.nextLine().trim();
+
+            if (email.isEmpty()) {
+                errorMsg = "Lỗi: Email không được để trống! Vui lòng nhập lại.\n";
+                continue;
+            }
+            if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                errorMsg = "Lỗi: Định dạng Email không hợp lệ (Ví dụ đúng: abc@gmail.com)!\n";
+                continue;
+            }
+
+            if (studentService.getStudentByEmail(email) != null) {
+                errorMsg = "\nLỗi: Email '" + email + "' đã được đăng ký bởi học viên khác!\nVui lòng sử dụng một địa chỉ Email khác.\n\n";
+                continue;
+            }
+
+            return email;
         }
     }
 

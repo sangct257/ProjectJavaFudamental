@@ -42,7 +42,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public List<Course> getRecommendedCoursesByEnrolled(int studentId, int limit) {
         List<Course> allCourses = getAllCourses(1, 1000);
         List<Course> enrolledCourses = getCoursesByStudentId(studentId, 1, 1000);
-        List<Course> recommendedList = new java.util.ArrayList<>();
+        List<Course> recommendedList = new java.util.ArrayList<>(); //
 
         if (enrolledCourses == null || enrolledCourses.isEmpty()) {
             return recommendedList;

@@ -10,12 +10,11 @@ public class AdminView {
         while (flag) {
             System.out.println("\n============= MENU ADMIN ==========");
             System.out.println("""
-                    1. Quản lý khóa học
-                    2. Quản lý học viên
-                    3. Quản lý đăng ký khóa học
-                    4. Thống kê học viên theo khóa học
-                    5. Đăng xuất
-            """);
+            1. Quản lý khóa học
+            2. Quản lý học viên
+            3. Quản lý đăng ký khóa học
+            4. Thống kê học viên theo khóa học
+            5. Đăng xuất """);
             System.out.println("===================================");
 
             while (true){

@@ -15,6 +15,9 @@ public interface StudentService {
     // Thêm mới học viên
     boolean insertStudent(Student student);
 
+    // kiểm tra email đã tồn tại chưa
+    Student getStudentByEmail(String email);
+
     // Cập nhập thông tin học viên
     Student getStudentById(int id);
 

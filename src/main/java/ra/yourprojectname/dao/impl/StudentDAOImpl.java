@@ -21,6 +21,7 @@ public class StudentDAOImpl implements StudentDAO {
         try {
             pstmt = con.prepareStatement("SELECT * FROM student WHERE email = ?");
             pstmt.setString(1, email);
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 student.setId(rs.getInt("id"));
                 student.setName(rs.getString("name"));
