@@ -9,21 +9,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
-public class EnrollmentForAdminView {
+public class EnrollmentView {
     private final EnrollmentService enrollmentService = new EnrollmentServiceImpl();
     private final int pageSize = 3;
-    // Tạo sẵn formatter để định dạng ngày giờ cho gọn đẹp, vừa vặn với bảng
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    public EnrollmentForAdminView(Scanner scanner) {
+    public EnrollmentView(Scanner scanner) {
         boolean flag = true;
         int choose;
         while (flag) {
             System.out.println("\n================= QUẢN LÝ ĐĂNG KÝ KHOÁ HỌC =================");
-            System.out.println("1. Hiển thị học viên theo từng khoá học");
-            System.out.println("2. Duyệt học viên đăng ký khóa học");
-            System.out.println("3. Xóa học viên khỏi khoá học (Xem danh sách trước)");
-            System.out.println("4. Quay về menu chính");
+            System.out.println("""
+                    1. Hiển thị học viên theo từng khoá học
+                    2. Duyệt học viên đăng ký khóa học
+                    3. Xóa học viên khỏi khoá học (Xem danh sách trước
+                    4. Quay về menu chính 
+                    """);
             System.out.println("============================================================");
             while (true) {
                 System.out.print("Nhập lựa chọn: ");

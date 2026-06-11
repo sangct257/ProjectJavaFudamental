@@ -20,7 +20,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public int getTotalPages(int pageSize) {
+    public int countTotalCourses(int pageSize) {
         return (int) Math.ceil((double) courseDAO.countTotalCourses() / pageSize);
     }
 
@@ -28,6 +28,9 @@ public class CourseServiceImpl implements CourseService {
     public boolean insertCourse(Course course) {
         return courseDAO.insertCourse(course);
     }
+
+    @Override
+    public Course getCourseById(int id) { return courseDAO.getCourseById(id); }
 
     @Override
     public boolean updateCourse(Course course) {
@@ -50,10 +53,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> getAllSorted(String column, String direction, int page, int pageSize) {
-        return courseDAO.findAllSorted(column, direction, pageSize, computeOffset(page, pageSize));
+    public List<Course> getAllSortedByNameOrById(String column, String direction, int page, int pageSize) {
+        return courseDAO.getAllSortedByNameOrById(column, direction, pageSize, computeOffset(page, pageSize));
     }
-
-    @Override
-    public Course getCourseById(int id) { return courseDAO.findCourseById(id); }
 }

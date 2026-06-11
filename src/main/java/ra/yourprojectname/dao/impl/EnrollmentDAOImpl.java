@@ -92,11 +92,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public List<Course> getCoursesByStudentIdSorted(int studentId, String column, String direction, int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String orderTarget = column.equalsIgnoreCase("date") ? "e.create_at" : "c." + column;
             String sql = "SELECT c.* FROM Course c JOIN enrollment e ON c.id = e.course_id " +
                     "WHERE e.student_id = ? ORDER BY " + orderTarget + " " + direction + " LIMIT ? OFFSET ?";
@@ -125,10 +125,10 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public boolean cancelEnrollmentByStudent(int studentId, int courseId) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("DELETE FROM enrollment WHERE student_id = ? AND course_id = ? AND status = 'WAITING'::enrollment_status");
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, courseId);

@@ -117,7 +117,6 @@ public class LoginView {
         }
     }
 
-
     public void showLoginInfo() {
         Scanner scanner = new Scanner(System.in);
         int choose;

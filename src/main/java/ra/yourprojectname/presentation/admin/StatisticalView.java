@@ -6,20 +6,21 @@ import ra.yourprojectname.business.impl.StatisticalServiceImpl;
 import java.util.Map;
 import java.util.Scanner;
 
-public class StatisticalForAdminView {
+public class StatisticalView {
     private final StatisticalService statisticalService = new StatisticalServiceImpl();
     private final int pageSize = 5;
 
-    public StatisticalForAdminView(Scanner scanner) {
+    public StatisticalView(Scanner scanner) {
         boolean flag = true;
         int choose;
         while (flag) {
             System.out.println("\n===================== MENU THỐNG KÊ =====================");
-            System.out.println("1. Thống kê tổng số lượng khoá học và học viên");
-            System.out.println("2. Thống kê số lượng học viên theo từng khoá học");
-            System.out.println("3. Top 5 khoá học đông học viên nhất");
-            System.out.println("4. Liệt kê khoá học trên 10 học viên");
-            System.out.println("5. Quay về menu chính");
+            System.out.println("""
+                        1. Thống kê tổng số lượng khoá học và học viên
+                        2. Thống kê số lượng học viên theo từng khoá học
+                        3. Top 5 khoá học đông học viên nhất
+                        4. Liệt kê khoá học trên 10 học viên
+                        5. Quay về menu chính""");
             System.out.println("==========================================================");
             while (true) {
                 System.out.print("Nhập lựa chọn: ");

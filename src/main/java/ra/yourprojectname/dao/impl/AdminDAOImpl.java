@@ -1,7 +1,6 @@
 package ra.yourprojectname.dao.impl;
 
 import ra.yourprojectname.dao.AdminDAO;
-import ra.yourprojectname.data_login.CheckLogin;
 import ra.yourprojectname.until.DBUtility;
 import ra.yourprojectname.until.PasswordHasher;
 
@@ -25,8 +24,6 @@ public class AdminDAOImpl implements AdminDAO {
             pstmt.setString(2, encryptedInputPassword);
             rs = pstmt.executeQuery();
             if(rs.next()){
-                //..login thành công
-                CheckLogin.isAdmin = 1;
                 return true;
             }else{
                 System.out.println("Sai username hoặc password");

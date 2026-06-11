@@ -109,7 +109,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public List<Course> searchCourses(String keyword, int page, int pageSize) {
+    public List<Course> searchCoursesByName(String keyword, int page, int pageSize) {
         return courseDAO.findCourseByName(keyword.trim(), pageSize, computeOffset(page, pageSize));
     }
 
@@ -146,12 +146,12 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
-    public boolean cancelEnrolledCourse(int studentId, int courseId) {
+    public boolean cancelEnrollment(int studentId, int courseId) {
         return enrollmentDAO.cancelEnrollmentByStudent(studentId, courseId);
     }
 
     @Override
-    public boolean isCourseEnrolledByStudent(int studentId, int courseId) {
+    public boolean isCourseEnrolled(int studentId, int courseId) {
         return enrollmentDAO.isEnrolled(studentId, courseId);
     }
 

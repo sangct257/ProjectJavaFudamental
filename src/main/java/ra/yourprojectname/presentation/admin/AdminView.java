@@ -8,12 +8,14 @@ public class AdminView {
         int choose = 0;
         boolean flag = true;
         while (flag) {
-            System.out.println("============= MENU ADMIN ==========");
-            System.out.println("1. Quản lý khóa học");
-            System.out.println("2. Quản lý học viên");
-            System.out.println("3. Quản lý đăng ký khóa học");
-            System.out.println("4. Thống kê học viên theo khóa học");
-            System.out.println("5. Đăng xuất");
+            System.out.println("\n============= MENU ADMIN ==========");
+            System.out.println("""
+                    1. Quản lý khóa học
+                    2. Quản lý học viên
+                    3. Quản lý đăng ký khóa học
+                    4. Thống kê học viên theo khóa học
+                    5. Đăng xuất
+            """);
             System.out.println("===================================");
 
             while (true){
@@ -28,16 +30,16 @@ public class AdminView {
 
             switch (choose) {
                 case 1:
-                    new CourseForAdminView(scanner);
+                    new CourseView(scanner);
                     break;
                 case 2:
-                    new StudentForAdminView(scanner);
+                    new StudentView(scanner);
                     break;
                 case 3:
-                    new EnrollmentForAdminView(scanner);
+                    new EnrollmentView(scanner);
                     break;
                 case 4:
-                    new StatisticalForAdminView(scanner);
+                    new StatisticalView(scanner);
                     break;
                 case 5:
                     flag = false;

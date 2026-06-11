@@ -8,14 +8,22 @@ import java.util.List;
 
 public interface EnrollmentDAO {
     // Menu Student
-    //Danh sách khoá học
+    // Danh sách khoá học theo sinh viên có phân trang
     List<Course> getCoursesByStudentId(int studentId, int limit, int offset);
-    int countCoursesByStudentId(int studentId);
-    List<Course> getCoursesByStudentIdSorted(int studentId, String column, String direction, int limit, int offset);
 
+    // Đếm tổng số khóa học của học viên
+    int countCoursesByStudentId(int studentId);
+
+    // Đăng ký khóa học mới
     boolean insertEnrollment(int studentId, int courseId);
 
+    //Sắp xếp khóa học (theo tên/ngày đăng ký - tăng dần/giảm dần)
+    List<Course> getCoursesByStudentIdSorted(int studentId, String column, String direction, int limit, int offset);
+
+    // Xoá khoá học theo học viên
     boolean cancelEnrollmentByStudent(int studentId, int courseId);
+
+    // Kiểm tra trùng lặp đăng ký
     boolean isEnrolled(int studentId, int courseId);
 
     // Menu Admin

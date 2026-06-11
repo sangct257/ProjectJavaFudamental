@@ -1,7 +1,6 @@
 package ra.yourprojectname.dao.impl;
 
 import ra.yourprojectname.dao.StudentDAO;
-import ra.yourprojectname.data_login.CheckLogin;
 import ra.yourprojectname.model.Student;
 import ra.yourprojectname.until.DBUtility;
 import ra.yourprojectname.until.PasswordHasher;
@@ -13,18 +12,46 @@ import java.util.List;
 public class StudentDAOImpl implements StudentDAO {
 
     @Override
-    public boolean login(String email, String password) {
+    public Student getStudentByEmail(String email) {
+        Student student = new Student();
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
             con = DBUtility.openConnection();
+            pstmt = con.prepareStatement("SELECT * FROM student WHERE email = ?");
+            pstmt.setString(1, email);
+            if (rs.next()) {
+                student.setId(rs.getInt("id"));
+                student.setName(rs.getString("name"));
+                student.setDob(rs.getDate("dob"));
+                student.setEmail(rs.getString("email"));
+                student.setSex(rs.getBoolean("sex"));
+                student.setPhone(rs.getString("phone"));
+                student.setPassword(rs.getString("password"));
+                student.setCreateAt(rs.getDate("create_at"));
+                return student;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return null;
+    }
+
+    @Override
+    public boolean login(String email, String password) {
+        Connection con;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        con = DBUtility.openConnection();
+        try {
             pstmt = con.prepareStatement("SELECT * FROM Student WHERE email = ? AND password = ?");
             pstmt.setString(1, email);
             pstmt.setString(2, PasswordHasher.hashPassword(password));
             rs = pstmt.executeQuery();
             if(rs.next()){
-                CheckLogin.isAdmin = 2;
                 return true;
             } else {
                 System.err.println("Sai tài khoản hoặc mật khẩu đăng nhập!");
@@ -41,11 +68,11 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public List<Student> getAllStudents(int limit, int offset) {
         List<Student> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT * FROM Student ORDER BY id ASC LIMIT ? OFFSET ?");
             pstmt.setInt(1, limit);
             pstmt.setInt(2, offset);
@@ -67,11 +94,11 @@ public class StudentDAOImpl implements StudentDAO {
 
     @Override
     public int countTotalStudents() {
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT COUNT(*) FROM Student");
             rs = pstmt.executeQuery();
             if (rs.next()) return rs.getInt(1);
@@ -86,10 +113,10 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public boolean insertStudent(Student student) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("INSERT INTO Student(name, dob, email, sex, phone, password, create_at) VALUES(?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, student.getName());
             pstmt.setDate(2, new java.sql.Date(student.getDob().getTime()));
@@ -97,7 +124,7 @@ public class StudentDAOImpl implements StudentDAO {
             pstmt.setBoolean(4, student.isSex());
             pstmt.setString(5, student.getPhone());
             pstmt.setString(6, PasswordHasher.hashPassword(student.getPassword()));
-            pstmt.setDate(7, new java.sql.Date(student.getCreate_at().getTime()));
+            pstmt.setDate(7, new java.sql.Date(student.getCreateAt().getTime()));
             flag = pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -109,6 +136,7 @@ public class StudentDAOImpl implements StudentDAO {
 
     @Override
     public Student getStudentById(int id) {
+        Student student = new Student();
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -118,18 +146,22 @@ public class StudentDAOImpl implements StudentDAO {
             pstmt.setInt(1, id);
             rs = pstmt.executeQuery();
             if (rs.next()) {
-                return new Student(
-                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
-                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
-                        rs.getString("password"), rs.getDate("create_at")
-                );
+                student.setId(rs.getInt("id"));
+                student.setName(rs.getString("name"));
+                student.setDob(rs.getDate("dob"));
+                student.setEmail(rs.getString("email"));
+                student.setSex(rs.getBoolean("sex"));
+                student.setPhone(rs.getString("phone"));
+                student.setPassword(rs.getString("password"));
+                student.setCreateAt(rs.getDate("create_at"));
+                return student;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             DBUtility.closeConnection(rs, pstmt, con);
         }
-        return null;
+        return student;
     }
 
     @Override
@@ -172,31 +204,6 @@ public class StudentDAOImpl implements StudentDAO {
             DBUtility.closeConnection(null, pstmt, con);
         }
         return flag;
-    }
-
-    @Override
-    public Student getStudentByEmail(String email) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = DBUtility.openConnection();
-            pstmt = con.prepareStatement("SELECT * FROM student WHERE email = ?");
-            pstmt.setString(1, email);
-            rs = pstmt.executeQuery();
-            if (rs.next()){
-                return new Student(
-                        rs.getInt("id"), rs.getString("name"), rs.getDate("dob"),
-                        rs.getString("email"), rs.getBoolean("sex"), rs.getString("phone"),
-                        rs.getString("password"), rs.getDate("create_at")
-                );
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            DBUtility.closeConnection(rs, pstmt, con);
-        }
-        return null;
     }
 
     @Override

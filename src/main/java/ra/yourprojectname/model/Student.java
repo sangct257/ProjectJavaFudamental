@@ -10,12 +10,12 @@ public class Student {
     private boolean sex;
     private String phone;
     private String password;
-    private Date create_at;
+    private Date createAt;
 
     public Student() {
     }
 
-    public Student(int id, String name, Date dob, String email, boolean sex, String phone, String password, Date create_at) {
+    public Student(int id, String name, Date dob, String email, boolean sex, String phone, String password, Date createAt) {
         this.id = id;
         this.name = name;
         this.dob = dob;
@@ -23,7 +23,7 @@ public class Student {
         this.sex = sex;
         this.phone = phone;
         this.password = password;
-        this.create_at = create_at;
+        this.createAt = createAt;
     }
 
     public int getId() {
@@ -82,25 +82,11 @@ public class Student {
         this.password = password;
     }
 
-    public Date getCreate_at() {
-        return create_at;
+    public Date getCreateAt() {
+        return createAt;
     }
 
-    public void setCreate_at(Date create_at) {
-        this.create_at = create_at;
-    }
-
-    @Override
-    public String toString() {
-        return "Student{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", dob=" + dob +
-                ", email='" + email + '\'' +
-                ", sex=" + sex +
-                ", phone='" + phone + '\'' +
-                ", password='" + password + '\'' +
-                ", create_at=" + create_at +
-                '}';
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
     }
 }

@@ -1,7 +1,6 @@
 package ra.yourprojectname.dao.impl;
 
 import ra.yourprojectname.dao.CourseDAO;
-import ra.yourprojectname.data_login.CheckLogin;
 import ra.yourprojectname.model.Course;
 import ra.yourprojectname.until.DBUtility;
 
@@ -35,7 +34,7 @@ public class CourseDAOImpl implements CourseDAO {
                 course.setName(rs.getString("name"));
                 course.setDuration(rs.getInt("duration"));
                 course.setInstructor(rs.getString("instructor"));
-                course.setCreate_at(rs.getDate("create_at"));
+                course.setCreateAt(rs.getDate("create_at"));
                 list.add(course);
             }
         } catch (SQLException e) {
@@ -86,6 +85,33 @@ public class CourseDAOImpl implements CourseDAO {
         }
 
         return flag;
+    }
+
+    @Override
+    public Course getCourseById(int id) {
+        Course course = new Course();
+        Connection con;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        con = DBUtility.openConnection();
+        try {
+            pstmt = con.prepareStatement("SELECT * FROM Course WHERE id = ?");
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                course.setId(rs.getInt("id"));
+                course.setName(rs.getString("name"));
+                course.setDuration(rs.getInt("duration"));
+                course.setInstructor(rs.getString("instructor"));
+                course.setCreateAt(rs.getDate("create_at"));
+                return course;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            DBUtility.closeConnection(rs, pstmt, con);
+        }
+        return course;
     }
 
     @Override
@@ -150,7 +176,7 @@ public class CourseDAOImpl implements CourseDAO {
                 course.setName(rs.getString("name"));
                 course.setDuration(rs.getInt("duration"));
                 course.setInstructor(rs.getString("instructor"));
-                course.setCreate_at(rs.getDate("create_at"));
+                course.setCreateAt(rs.getDate("create_at"));
                 list.add(course);
             }
         } catch (SQLException e) {
@@ -181,14 +207,13 @@ public class CourseDAOImpl implements CourseDAO {
     }
 
     @Override
-    public List<Course> findAllSorted(String orderByColumn, String direction, int limit, int offset) {
+    public List<Course> getAllSortedByNameOrById(String orderByColumn, String direction, int limit, int offset) {
         List<Course> list = new ArrayList<>();
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
             con = DBUtility.openConnection();
-            // Kết hợp Sắp xếp động + Phân trang động
             String sql = "SELECT * FROM Course ORDER BY " + orderByColumn + " " + direction + " LIMIT ? OFFSET ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, limit);
@@ -211,31 +236,5 @@ public class CourseDAOImpl implements CourseDAO {
             DBUtility.closeConnection(rs, pstmt, con);
         }
         return list;
-    }
-
-    @Override
-    public Course findCourseById(int id) {
-        Course course = new Course();
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        con = DBUtility.openConnection();
-        try {
-            pstmt = con.prepareStatement("SELECT * FROM Course WHERE id = ?");
-            pstmt.setInt(1, id);
-            rs = pstmt.executeQuery();
-            while (rs.next()) {
-                course.setId(rs.getInt("id"));
-                course.setName(rs.getString("name"));
-                course.setDuration(rs.getInt("duration"));
-                course.setInstructor(rs.getString("instructor"));
-                course.setCreate_at(rs.getDate("create_at"));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            DBUtility.closeConnection(rs, pstmt, con);
-        }
-        return course;
     }
 }

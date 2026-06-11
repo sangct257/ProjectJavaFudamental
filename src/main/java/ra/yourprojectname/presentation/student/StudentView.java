@@ -28,7 +28,14 @@ public class StudentView {
         while (true) {
             System.out.println("\n============= MENU STUDENT ==========");
             System.out.println("Chào mừng học viên: " + currentStudent.getName());
-            System.out.println("1. Xem danh sách \n2. Đăng ký khoá học\n3. Xem khoá học đã đăng ký\n4. Huỷ đăng ký khoá học (nếu chưa bắt đầu)\n5. Đổi mật khẩu\n6. Đăng xuất");
+            System.out.println("""
+                    1. Xem danh sách 
+                    2. Đăng ký khoá học
+                    3. Xem khoá học đã đăng ký
+                    4. Huỷ đăng ký khoá học (nếu chưa bắt đầu)
+                    5. Đổi mật khẩu
+                    6. Đăng xuất
+            """);
             System.out.println("===================================");
             int choose = inputInt(scanner, "Mới chọn: ");
 
@@ -86,7 +93,7 @@ public class StudentView {
                 System.out.printf("\n=== DANH SÁCH KHÓA HỌC HIỆN CÓ (TRANG %d / %d) ===\n", currentPage, totalPages == 0 ? 1 : totalPages);
             } else {
                 totalPages = enrollmentService.getSearchCoursesTotalPages(keyword, pageSize);
-                coursesPage = enrollmentService.searchCourses(keyword, currentPage, pageSize);
+                coursesPage = enrollmentService.searchCoursesByName(keyword, currentPage, pageSize);
                 System.out.printf("\n=== KẾT QUẢ TÌM KIẾM [Từ khóa: '%s'] (TRANG %d / %d) ===\n", keyword, currentPage, totalPages == 0 ? 1 : totalPages);
             }
 
@@ -195,9 +202,10 @@ public class StudentView {
         }
     }
 
+    // --- XẮP XẾP KHÓA HỌC ---
     private void configAndShowSortedCourses(Scanner scanner) {
-        System.out.println("\nSắp xếp theo: 1. Tên khóa học | 2. Thời lượng (h)");
-        String column = inputInt(scanner, "Lựa chọn (1-2): ") == 2 ? "duration" : "name";
+        System.out.println("\nSắp xếp theo: 1. Tên khóa học | 2. Ngày đăng ký");
+        String column = inputInt(scanner, "Lựa chọn (1-2): ") == 2 ? "duration" : "create_at";
 
         System.out.println("Chiều sắp xếp: 1. Tăng dần (A-Z) | 2. Giảm dần (Z-A)");
         String direction = inputInt(scanner, "Lựa chọn (1-2): ") == 2 ? "DESC" : "ASC";
@@ -247,7 +255,7 @@ public class StudentView {
                 int courseId = Integer.parseInt(input);
                 System.out.print("Bạn chắc chắn muốn hủy đăng ký khóa học này? (Gõ 'Y' để xác nhận): ");
                 if (scanner.nextLine().trim().equalsIgnoreCase("Y")) {
-                    if (enrollmentService.cancelEnrolledCourse(currentStudent.getId(), courseId)) {
+                    if (enrollmentService.cancelEnrollment(currentStudent.getId(), courseId)) {
                         System.out.println("Hủy đăng ký khóa học thành công!");
                         break;
                     } else {
@@ -288,7 +296,7 @@ public class StudentView {
         }
     }
 
-    // ---HÀM ÉP KIỂU SỐ NGUYÊN DÙNG CHUNG---
+    // ---HÀM ÉP KIỂU SỐ NGUYÊN---
     private int inputInt(Scanner scanner, String msg) {
         while (true) {
             System.out.print(msg);
@@ -312,10 +320,10 @@ public class StudentView {
 
         for (Course c : list) {
             String courseNameDisplay = c.getName();
-            if (enrollmentService.isCourseEnrolledByStudent(currentStudent.getId(), c.getId())) {
+            if (enrollmentService.isCourseEnrolled(currentStudent.getId(), c.getId())) {
                 courseNameDisplay += " [ĐÃ ĐĂNG KÝ]";
             }
-            System.out.printf("| %-4d | %-47s | %-13d | %-23s | %-23s |\n", c.getId(), courseNameDisplay, c.getDuration(), c.getInstructor(),c.getCreate_at());
+            System.out.printf("| %-4d | %-47s | %-13d | %-23s | %-23s |\n", c.getId(), courseNameDisplay, c.getDuration(), c.getInstructor(),c.getCreateAt());
         }
         System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(49) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(25) + "+");
     }

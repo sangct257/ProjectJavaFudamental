@@ -7,17 +7,17 @@ public class Course {
     private String name;
     private int duration;
     private String instructor;
-    private Date create_at;
+    private Date createAt;
 
     public Course() {
     }
 
-    public Course(int id, String name, int duration, String instructor, Date create_at) {
+    public Course(int id, String name, int duration, String instructor, Date createAt) {
         this.id = id;
         this.name = name;
         this.duration = duration;
         this.instructor = instructor;
-        this.create_at = create_at;
+        this.createAt = createAt;
     }
 
     public int getId() {
@@ -52,22 +52,11 @@ public class Course {
         this.instructor = instructor;
     }
 
-    public Date getCreate_at() {
-        return create_at;
+    public Date getCreateAt() {
+        return createAt;
     }
 
-    public void setCreate_at(Date create_at) {
-        this.create_at = create_at;
-    }
-
-    @Override
-    public String toString() {
-        return "Course{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", duration=" + duration +
-                ", instructor='" + instructor + '\'' +
-                ", create_at=" + create_at +
-                '}';
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
     }
 }

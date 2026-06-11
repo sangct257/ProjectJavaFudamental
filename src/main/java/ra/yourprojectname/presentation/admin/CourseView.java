@@ -8,14 +8,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
-public class CourseForAdminView {
+public class CourseView {
     private final CourseService courseService = new CourseServiceImpl();
     private final int pageSize = 3; // Quản lý kích thước trang tập trung tại một nơi
 
-    public CourseForAdminView(Scanner scanner) {
+    public CourseView(Scanner scanner) {
         while (true) {
             System.out.println("\n=============== QUẢN LÝ KHÓA HỌC =============");
-            System.out.println("1. Hiển thị danh sách khóa học\n2. Thêm mới khóa học\n3. Chỉnh sửa thông tin\n4. Xóa khóa học\n5. Tìm kiếm theo tên\n6. Sắp xếp danh sách\n7. Quay về menu chính");
+            System.out.println("""
+                    1. Hiển thị danh sách khóa học
+                    2. Thêm mới khóa học
+                    3. Chỉnh sửa thông tin
+                    4. Xóa khóa học
+                    5. Tìm kiếm theo tên
+                    6. Sắp xếp danh sách
+                    7. Quay về menu chính
+                    """);
             System.out.println("==============================================");
             int choose = inputInt(scanner, "Nhập lựa chọn: ");
 
@@ -36,7 +44,7 @@ public class CourseForAdminView {
     public void displayCourses(Scanner scanner) {
         int currentPage = 1;
         while (true) {
-            int totalPages = courseService.getTotalPages(pageSize);
+            int totalPages = courseService.countTotalCourses(pageSize);
             List<Course> list = courseService.getAllCourse(currentPage, pageSize);
 
             if (checkEmpty(list)) return;
@@ -74,8 +82,8 @@ public class CourseForAdminView {
 
         int currentPage = 1;
         while (true) {
-            int totalPages = courseService.getTotalPages(pageSize);
-            List<Course> list = courseService.getAllSorted(target, direction, currentPage, pageSize);
+            int totalPages = courseService.countTotalCourses(pageSize);
+            List<Course> list = courseService.getAllSortedByNameOrById(target, direction, currentPage, pageSize);
 
             if (checkEmpty(list)) return;
 
@@ -134,7 +142,7 @@ public class CourseForAdminView {
                 editCourse.getName(),
                 editCourse.getDuration(),
                 editCourse.getInstructor(),
-                editCourse.getCreate_at()
+                editCourse.getCreateAt()
         );
 
         while (true) {
@@ -221,7 +229,7 @@ public class CourseForAdminView {
         System.out.printf("| %-4s | %-28s | %-13s | %-23s | %-13s |\n", "ID", "TÊN KHÓA HỌC", "THỜI LƯỢNG", "GIẢNG VIÊN", "NGÀY TẠO");
         System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
         for (Course c : list) {
-            System.out.printf("| %-4d | %-28s | %-10d giờ | %-23s | %-13s |\n", c.getId(), c.getName(), c.getDuration(), c.getInstructor(), c.getCreate_at().toString());
+            System.out.printf("| %-4d | %-28s | %-10d giờ | %-23s | %-13s |\n", c.getId(), c.getName(), c.getDuration(), c.getInstructor(), c.getCreateAt().toString());
         }
         System.out.println("+" + "-".repeat(6) + "+" + "-".repeat(30) + "+" + "-".repeat(15) + "+" + "-".repeat(25) + "+" + "-".repeat(15) + "+");
     }

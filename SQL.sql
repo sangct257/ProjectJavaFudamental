@@ -5,7 +5,6 @@ create table Admin(
 	username varchar(50) not null unique,
 	password varchar(255) not null
 );
-insert into Admin(username, password) values ('admin', '123456');
 create table Student(
     id serial primary key,
     name varchar(100) not null,
@@ -16,7 +15,7 @@ create table Student(
     password varchar(255) not null,
     create_at date default now()
 );
-insert into Student(name, dob, email, sex, password,phone) values ('Dinh Duc Sang', '2003-07-25', 'sangct257003@gmail.com', true, '123456', '0987654321');
+
 create table Course(
     id serial primary key,
     name varchar(100) not null,

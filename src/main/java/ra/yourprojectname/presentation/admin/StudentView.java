@@ -10,21 +10,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
-public class StudentForAdminView {
+public class StudentView {
     private final StudentService studentService = new StudentServiceImpl();
     private final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
     private final int pageSize = 3;
 
-    public StudentForAdminView(Scanner scanner) {
+    public StudentView(Scanner scanner) {
         while (true) {
             System.out.println("\n=============== QUẢN LÝ HỌC VIÊN =============");
-            System.out.println("1. Hiển thị danh sách học viên\n" +
-                    "2. Thêm mới học viên\n" +
-                    "3. Chỉnh sửa thông tin\n" +
-                    "4. Xóa học viên\n" +
-                    "5. Tìm kiếm học viên\n" +
-                    "6. Sắp xếp danh sách\n" +
-                    "7. Quay về menu chính");
+            System.out.println("""
+                    1. Hiển thị danh sách học viên
+                    2. Thêm mới học viên
+                    3. Chỉnh sửa thông tin
+                    4. Xóa học viên
+                    5. Tìm kiếm học viên
+                    6. Sắp xếp danh sách
+                    7. Quay về menu chính
+                    """);
             System.out.println("==============================================");
             int choose = inputInt(scanner, "Nhập lựa chọn: ");
 
@@ -155,7 +157,7 @@ public class StudentForAdminView {
         // Tạo đối tượng Clone để lưu tạm các thay đổi, tránh hỏng dữ liệu gốc khi bấm Hủy
         Student cloneStudent = new Student(
                 editStudent.getId(), editStudent.getName(), editStudent.getDob(), editStudent.getEmail(),
-                editStudent.isSex(), editStudent.getPhone(), editStudent.getPassword(), editStudent.getCreate_at()
+                editStudent.isSex(), editStudent.getPhone(), editStudent.getPassword(), editStudent.getCreateAt()
         );
 
         while (true) {
