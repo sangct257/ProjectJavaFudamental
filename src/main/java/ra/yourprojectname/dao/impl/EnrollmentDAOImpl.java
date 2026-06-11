@@ -19,11 +19,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public List<Course> getCoursesByStudentId(int studentId, int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String sql = "SELECT c.* FROM Course c JOIN enrollment e ON c.id = e.course_id " +
                     "WHERE e.student_id = ? ORDER BY e.id ASC LIMIT ? OFFSET ?";
             pstmt = con.prepareStatement(sql);
@@ -50,11 +50,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
 
     @Override
     public int countCoursesByStudentId(int studentId) {
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String sql = "SELECT COUNT(*) FROM enrollment WHERE student_id = ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, studentId);
@@ -73,10 +73,10 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public boolean insertEnrollment(int studentId, int courseId) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("INSERT INTO enrollment (student_id, course_id) VALUES (?, ?)");
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, courseId);
@@ -144,11 +144,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public boolean isEnrolled(int studentId, int courseId) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT COUNT(*) FROM enrollment WHERE student_id = ? AND course_id = ?");
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, courseId);
@@ -167,12 +167,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public List<Enrollment> getStudentsByCourseId(int courseId, int limit, int offset) {
         List<Enrollment> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
-            // ĐÃ SỬA: SELECT đầy đủ thông tin của cả 3 bảng và JOIN thêm bảng course c
             String sql = "SELECT e.id AS enrollment_id, e.status, e.registered_at, " +
                     "s.id AS student_id, s.name AS student_name, s.dob, s.email, s.sex, s.phone, s.password, s.create_at, " +
                     "c.id AS course_id, c.name AS course_name, c.instructor " +
@@ -186,7 +185,6 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
             pstmt.setInt(3, offset);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                // 1. Đóng gói Object Student
                 Student student = new Student(
                         rs.getInt("student_id"),
                         rs.getString("student_name"),
@@ -198,17 +196,14 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
                         rs.getDate("create_at")
                 );
 
-                // 2. Đóng gói Object Course (Đầy đủ tên và giảng viên)
                 Course course = new Course();
                 course.setId(rs.getInt("course_id"));
                 course.setName(rs.getString("course_name"));
                 course.setInstructor(rs.getString("instructor"));
 
-                // 3. Xử lý trạng thái Enum
                 String statusStr = rs.getString("status");
                 EnrollmentStatus status = EnrollmentStatus.valueOf(statusStr);
 
-                // 4. Đóng gói vào đối tượng Enrollment tổng
                 Enrollment enrollment = new Enrollment();
                 enrollment.setId(rs.getInt("enrollment_id"));
                 enrollment.setStudent(student);
@@ -232,12 +227,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public List<Enrollment> getPendingEnrollments(int limit, int offset) {
         List<Enrollment> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
-            // ĐÃ SỬA: SELECT đầy đủ thông tin của cả 3 bảng cho danh sách chờ duyệt WAITING
             String sql = "SELECT e.id AS enrollment_id, e.status, e.registered_at, " +
                     "s.id AS student_id, s.name AS student_name, s.dob, s.email, s.sex, s.phone, s.password, s.create_at, " +
                     "c.id AS course_id, c.name AS course_name, c.instructor " +
@@ -251,7 +245,6 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
             pstmt.setInt(2, offset);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                // 1. Đóng gói Object Student
                 Student student = new Student(
                         rs.getInt("student_id"),
                         rs.getString("student_name"),
@@ -263,17 +256,14 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
                         rs.getDate("create_at")
                 );
 
-                // 2. Đóng gói Object Course
                 Course course = new Course();
                 course.setId(rs.getInt("course_id"));
                 course.setName(rs.getString("course_name"));
                 course.setInstructor(rs.getString("instructor"));
 
-                // 3. Xử lý trạng thái Enum
                 String statusStr = rs.getString("status");
                 EnrollmentStatus status = EnrollmentStatus.valueOf(statusStr);
 
-                // 4. Đóng gói vào đối tượng Enrollment tổng
                 Enrollment enrollment = new Enrollment();
                 enrollment.setId(rs.getInt("enrollment_id"));
                 enrollment.setStudent(student);
@@ -297,10 +287,10 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public boolean approveEnrollment(int studentId, int courseId) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("UPDATE enrollment SET status = 'CONFIRMED'::enrollment_status " +
                     "WHERE student_id = ? AND course_id = ? AND status = 'WAITING'::enrollment_status");
             pstmt.setInt(1, studentId);
@@ -317,11 +307,11 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public boolean isStudentInCourse(int studentId, int courseId) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT COUNT(*) FROM enrollment WHERE student_id = ? AND course_id = ?");
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, courseId);
@@ -340,10 +330,10 @@ public class EnrollmentDAOImpl implements EnrollmentDAO {
     @Override
     public boolean removeStudentFromCourse(int studentId, int courseId) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("DELETE FROM enrollment WHERE student_id = ? AND course_id = ?");
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, courseId);

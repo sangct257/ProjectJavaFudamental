@@ -16,12 +16,11 @@ public class CourseDAOImpl implements CourseDAO {
     @Override
     public List<Course> getAllCourse(int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
-            // Câu lệnh SQL nhận tham số LIMIT (số dòng lấy ra) và OFFSET (vị trí bắt đầu lấy)
             String sql = "SELECT * FROM Course ORDER BY id ASC LIMIT ? OFFSET ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, limit);
@@ -47,11 +46,11 @@ public class CourseDAOImpl implements CourseDAO {
 
     @Override
     public int countTotalCourses() {
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT COUNT(*) FROM Course");
             rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -70,7 +69,6 @@ public class CourseDAOImpl implements CourseDAO {
         boolean flag = false;
         Connection con;
         PreparedStatement pstmt = null;
-
         con = DBUtility.openConnection();
         try {
             pstmt = con.prepareStatement("INSERT INTO Course(name, duration, instructor) VALUES(?, ?, ?)");
@@ -157,12 +155,11 @@ public class CourseDAOImpl implements CourseDAO {
     @Override
     public List<Course> findCourseByName(String name, int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
-            // Thêm LIMIT và OFFSET vào cuối câu lệnh tìm kiếm
             String sql = "SELECT * FROM Course WHERE name ILIKE ? ORDER BY id ASC LIMIT ? OFFSET ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, "%" + name + "%");
@@ -189,11 +186,11 @@ public class CourseDAOImpl implements CourseDAO {
 
     @Override
     public int countCoursesByName(String name) {
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT COUNT(*) FROM Course WHERE name ILIKE ?");
             pstmt.setString(1, "%" + name + "%");
             rs = pstmt.executeQuery();
@@ -209,11 +206,11 @@ public class CourseDAOImpl implements CourseDAO {
     @Override
     public List<Course> getAllSortedByNameOrById(String orderByColumn, String direction, int limit, int offset) {
         List<Course> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String sql = "SELECT * FROM Course ORDER BY " + orderByColumn + " " + direction + " LIMIT ? OFFSET ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, limit);

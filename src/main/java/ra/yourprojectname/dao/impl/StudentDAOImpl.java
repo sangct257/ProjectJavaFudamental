@@ -14,11 +14,11 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public Student getStudentByEmail(String email) {
         Student student = new Student();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT * FROM student WHERE email = ?");
             pstmt.setString(1, email);
             if (rs.next()) {
@@ -137,11 +137,11 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public Student getStudentById(int id) {
         Student student = new Student();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("SELECT * FROM Student WHERE id = ?");
             pstmt.setInt(1, id);
             rs = pstmt.executeQuery();
@@ -167,10 +167,10 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public boolean updateStudent(Student student) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("UPDATE Student SET name = ?, dob = ?, email = ?, sex = ?, phone = ?, password = ? WHERE id = ?");
             pstmt.setString(1, student.getName());
             pstmt.setDate(2, new java.sql.Date(student.getDob().getTime()));
@@ -191,10 +191,10 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public boolean deleteStudent(int id) {
         boolean flag = false;
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("DELETE FROM Student WHERE id = ?");
             pstmt.setInt(1, id);
             flag = pstmt.executeUpdate() > 0;
@@ -209,11 +209,11 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public List<Student> findStudentByNameEmailOrId(String keyword, int limit, int offset) {
         List<Student> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String sql = "SELECT * FROM Student WHERE name ILIKE ? OR email ILIKE ? ";
             boolean isNumeric = keyword.matches("-?\\d+");
             if (isNumeric) sql += "OR id = ? ";
@@ -249,11 +249,11 @@ public class StudentDAOImpl implements StudentDAO {
 
     @Override
     public int countSearchStudents(String keyword) {
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String sql = "SELECT COUNT(*) FROM Student WHERE name ILIKE ? OR email ILIKE ? ";
             boolean isNumeric = keyword.matches("-?\\d+");
             if (isNumeric) sql += "OR id = ?";
@@ -276,11 +276,11 @@ public class StudentDAOImpl implements StudentDAO {
     @Override
     public List<Student> getAllSortedByNameOrById(String column, String direction, int limit, int offset) {
         List<Student> list = new ArrayList<>();
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             String sql = "SELECT * FROM Student ORDER BY " + column + " " + direction + " LIMIT ? OFFSET ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, limit);

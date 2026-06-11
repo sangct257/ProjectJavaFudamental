@@ -12,12 +12,11 @@ import java.sql.SQLException;
 public class AdminDAOImpl implements AdminDAO {
     @Override
     public boolean login(String username, String password) {
-        Connection con = null;
+        Connection con;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-
+        con = DBUtility.openConnection();
         try {
-            con = DBUtility.openConnection();
             pstmt = con.prepareStatement("select * from Admin where username=? and password=?");
             pstmt.setString(1, username);
             String encryptedInputPassword = PasswordHasher.hashPassword(password);

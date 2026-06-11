@@ -8,6 +8,7 @@ import java.util.Map;
 
 public class StatisticalServiceImpl implements StatisticalService {
     private final StatisticalDAO statisticalDAO = new StatisticalDAOImpl();
+
     @Override
     public int getTotalCoursesCount() {
         return statisticalDAO.getTotalCoursesCount();
